@@ -9,6 +9,10 @@ from .models import TestCase, Problem
 import requests
 
 # Create your views here.
+
+
+# FOR RUNNING THE CODE ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# TODO make this @login_required once done testing or once user auth is set up
 def process_run_code(request):
     if request.method == "POST":
         form = GetCode(request.POST)
@@ -22,8 +26,8 @@ def process_run_code(request):
                 problem = Problem.objects.get(id=problem_id)
             except Problem.DoesNotExist:
                 # TODO figure out html fragment to be returned with error messages
-                messages.error(request, "Issue finding problem")
-                return render(request, "unable_to_find_problem.html")
+                messages.error(request, "Unable to Locate Problem")
+                return render(request, "problems/problem_run_response.html")
 
             # TODO figure out how to allow a user to add/edit displayed testcases. right now this is fine.
             few_testcases = TestCase.objects.filter(problem=problem)[:3]
@@ -34,30 +38,31 @@ def process_run_code(request):
                     stdin = testcase.input_data
                     expected_output = testcase.expected_output
                     
-                    response = requests.post('http://localhost:2358/submissions', json={"source_code": source_code, "language_id": language_id, "stdin": stdin, "expected_output": expected_output})
+                    response = requests.post("http://localhost:2358/submissions", json={"source_code": source_code, "language_id": language_id, "stdin": stdin, "expected_output": expected_output})
                     data = response.json()
                     token = data["token"]
                     tokens.append(token)
                 request.session["tokens"] = tokens
-                # TODO pass information to frontend to begin polling check_run_results
+                # TODO pass information to frontend to begin polling check_run_results. should be a button changed from "run" to "running" or an icon change
                 return render(request, "information")
             else:
-                # TODO handle no testcases
-                return 
+                messages.error(request, "No Testcases Found")
+                return render(request, "problems/problem_run_response.html") 
         else:
             # form is invalid
-            return
+            messages.error(request, "Invalid Form")
+            return render(request, "problems/problem_run_response.html")
             
-
+# TODO make this @login_required once done testing or once user auth is set up
 def check_run_results(request):
     tokens = request.session.get("tokens")
-    # to avoid altering 'tokens' while iterating over it
     pending_tokens = tokens[:]
     if tokens:
         results = []
         while len(pending_tokens) > 0:
+            # to avoid altering 'tokens' while iterating over it
             for token in pending_tokens[:]:
-                # "status_description" should be a valid field, but may not be =
+                # "status_description" should be a valid field, but may not be
                 response = requests.get(f'http://localhost:2358/submissions/{token}?fields=stdout,stderr,status_id,status_description,language_id,time')
                 data = response.json()
                 status = data["status_id"]
@@ -71,7 +76,7 @@ def check_run_results(request):
                     status_id = data["status_id"]
                     status_description = data["status_description"]
                     language_id = data["language_id"]
-                    time = data["time"]
+                    execution_time = data["time"]
 
                     results.append({
                         "stdout": stdout,
@@ -79,22 +84,21 @@ def check_run_results(request):
                         "status_id": status_id,
                         "status_description": status_description,
                         "language_id": language_id,
-                        "time": time 
+                        "time": execution_time 
                     })
                     pending_tokens.remove(token)
-                # TODO handle errors
                 else:
-                    messages.error(request, status_description)
-                    return render(request, "reusable_fragment.html")
+                    return render(request, "problems/problem_run_response.html", {"stderr": stderr, "status_description": status_description})
             # TODO this may not be the best time, check on it later.
             time.sleep(0.1)
 
         # to avoid going over all of this again by accident
         del request.session["tokens"]
         # TODO make an html fragment for this
-        return render(request, "some web page", {"results": results})
+        return render(request, "problems/problem_run_response.html", {"results": results})
     else:
-        # TODO return an error 
-        return render(request, "ur cooked")
+        messages.error(request, "Unable to Retrieve Tokens")
+        return render(request, "problems/problem_run_response.html")
+
             
 

@@ -25,8 +25,17 @@
                 <button type="submit">Run</button>
             </form>
         </div>
-        <div class="problem-panel">
+        <div id="problem-panel" class="problem-panel">
+            <!-- the logic for this needs to be implemented -->
+            <button hx-post="{% url 'problem_question_window' %}" hx-target="problem-content" hx-trigger="click" hx-swap="innerHTML">Question</button> <!-- this should be an href back to the original problem panel-->
+            <button hx-post="{% url 'problem_solution_window' %}" hx-target="problem-content" hx-trigger="click" hx-swap="innerHTML">Solution</button>
+            <button hx-post="{% url 'problem_submissions_window' %}" hx-target="problem-content" hx-trigger="click" hx-swap="innerHTML">Submissions</button>
 
+            <div id="problem-content">
+                <!-- logic needs to be implemented. when the user clicks on a problem the get directed to this page, passing the problem along with them -->
+                {% if problem %}
+                    
+            </div>
 
         </div>
 
