@@ -29,7 +29,7 @@ class Problem(models.Model):
         return self.title
 
 class TestCase(models.Model):
-    input_Data = models.TextField()
+    input_data = models.TextField()
     expected_output = models.TextField()
     problem = models.ForeignKey(Problem, on_delete=models.CASCADE, related_name="testcases")
 

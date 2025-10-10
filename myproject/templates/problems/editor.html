@@ -1,0 +1,55 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <link rel="stylesheet" href="{% static 'css/problems.css' %}">
+    <script src="https://unpkg.com/htmx.org@1.9.9"></script>
+    <title>Editor</title>
+</head>
+<body>
+    <main class="problem-container">
+        <div class="header-row">
+            <!-- extract code from ace editor -->
+            <script>
+                document.body.addEventListener('htmx:configRequest', function(evt) {
+                    const editorContent = editor.getValue();
+                    document.getElementById('code-input').value = editorContent;
+                    });
+            </script>
+            <form hx-post="{% url 'process_run_code' %}" hx-target="#results-panel" hx-swap="innerHTML">
+                <textarea id="code_input" name="code" style="display: none;"></textarea>
+                <input type="hidden" id="language_id" name="language_id"/>
+                <input type="hidden" id="problem_id" name="problem_id"/>
+                <button type="submit">Run</button>
+            </form>
+        </div>
+        <div class="problem-panel">
+
+
+        </div>
+
+        <div class="editor-testcase-wrapper">
+            <div class="editor" id="editor">
+                type some text
+            </div>
+
+            <div class="testcase">
+                
+            </div>
+
+            <div id="results-panel"></div>
+
+        </div>
+
+        <script src="src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+        <script>
+            var editor = ace.edit("editor");
+            editor.setTheme("ace/theme/github_dark");
+            editor.session.setMode("ace/mode/python");
+        </script>
+
+    </main>
+</body>
+</html>
