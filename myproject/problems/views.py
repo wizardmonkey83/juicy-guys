@@ -99,6 +99,31 @@ def check_run_results(request):
     else:
         messages.error(request, "Unable to Retrieve Tokens")
         return render(request, "problems/problem_run_response.html")
+    
+# FOR SUBMITTING THE CODE ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+# FOR LOADING FRAGMENTS ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+@login_required
+def problem_question_window(request):
+    # TODO figure out redirect if user presses question twice
+    return
+
+@login_required
+def problem_solution_window(request):
+    # TODO figure out routing logic. all this does is change the window from the question
+    return
+
+@login_required
+def problem_submissions_window(request):
+    # TODO figure out routing logic. all this does is change the window from the question
+    return
 
             
 

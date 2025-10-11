@@ -18,6 +18,7 @@
                     document.getElementById('code-input').value = editorContent;
                     });
             </script>
+            <!-- this is duplicated. figure out how to use it correctly. hopefully a button is fine. -->
             <form hx-post="{% url 'process_run_code' %}" hx-target="#results-panel" hx-swap="innerHTML">
                 <textarea id="code_input" name="code" style="display: none;"></textarea>
                 <input type="hidden" id="language_id" name="language_id"/>
@@ -34,18 +35,46 @@
             <div id="problem-content">
                 <!-- logic needs to be implemented. when the user clicks on a problem the get directed to this page, passing the problem along with them -->
                 {% if problem %}
-                    
+                    <h1>{{ problem.title }}</h1>
+                    <!-- figure out how to check if a problem has been solved. can either query through submision (accounts.models) or create UserProblem model -->
+                    <span>{{ problem.difficulty }}</span>
+                    <span>{{ problem.status }}</span>
+
+                    <!-- this needs to maintain structure -->
+                    <pre>{{ problem.description }}</pre>
             </div>
 
         </div>
 
         <div class="editor-testcase-wrapper">
+            <!-- this may be where to place this dropdown as well as bug report -->
+
+            <!-- this might need to be a form. all questions are rendered in using the users original preference, maybe i can store this in their session -->
+            <select name="languages" id="languages">
+                <option value="python">Python</option>
+                <option value="java">Java</option>
+            </select>
+
+            <a href="https://some-bug-report-destination-probably-github/" target="blank">Report a Bug</a>
+
             <div class="editor" id="editor">
-                type some text
+                <!-- starting code needs to be placed here. this may be how to do it, not sure -->
+                <pre>{{ problem.starting_code }}</pre>
             </div>
 
-            <div class="testcase">
+            <div class="testcase-output">
+                <!-- logic for this needs to be implemented -->
+                <button hx-post="{% url 'problem_testcase_window' %}" hx-target="output-window" hx-trigger="click" hx-swap="innerHTML">Testcase</button>
+                <button hx-post="{% url 'problem_output_window' %}" hx-target="output-window" hx-trigger="click" hx-swap="innerHTML">Output</button>
                 
+                <div id="output-window">
+                    <!-- within this will be the testcases (1, 2, and/or 3) as well as the button to toggle between testcases -->
+                    <!-- if the user selects output, the testcase toggle buttons will remain, and the input, users output and expected output will be shown. if an error occurs, it will be shown -->
+                </div>
+                <!-- footer that holds the run/submit buttons -->
+                 <!-- logic for this needs to be implemented, not sure how to change the look of a button --> 
+                <button hx-post="{% url 'process_run_code' %}" hx-target="output-window" hx-trigger="click" hx-swap="innerHTML">Run</button>
+                <button hx-post="{% url 'process_submit_code' %}" hx-target="output-window" hx-trigger="click" hx-swap="innerHTML">Submit</button>
             </div>
 
             <div id="results-panel"></div>
@@ -56,6 +85,7 @@
         <script>
             var editor = ace.edit("editor");
             editor.setTheme("ace/theme/github_dark");
+            // watch this, you may need to swap it out if a user changes the language
             editor.session.setMode("ace/mode/python");
         </script>
 

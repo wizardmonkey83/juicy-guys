@@ -14,7 +14,7 @@ class Profile(models.Model):
     badges = models.ManyToManyField(Badge, on_delete=models.PROTECT)
     
     profile_picture = models.ImageField(default="avatar.jpg", upload_to="profile_pictures")
-    problems_solved = models.PositiveIntegerField(default=0)
+    problems_solved_count = models.PositiveIntegerField(default=0)
     
     def calculate_acceptance_rate(self):
         # TODO create logic for calculating acceptance rate
