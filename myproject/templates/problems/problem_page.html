@@ -18,13 +18,6 @@
                     document.getElementById('code-input').value = editorContent;
                     });
             </script>
-            <!-- this is duplicated. figure out how to use it correctly. hopefully a button is fine. -->
-            <form hx-post="{% url 'process_run_code' %}" hx-target="#results-panel" hx-swap="innerHTML">
-                <textarea id="code_input" name="code" style="display: none;"></textarea>
-                <input type="hidden" id="language_id" name="language_id"/>
-                <input type="hidden" id="problem_id" name="problem_id"/>
-                <button type="submit">Run</button>
-            </form>
         </div>
         <div id="problem-panel" class="problem-panel">
             <!-- the logic for this needs to be implemented -->
@@ -46,40 +39,46 @@
 
         </div>
 
-        <div class="editor-testcase-wrapper">
-            <!-- this may be where to place this dropdown as well as bug report -->
+        <form>
+            <div class="editor-testcase-wrapper">
+                <!-- this may be where to place this dropdown as well as bug report -->
 
-            <!-- this might need to be a form. all questions are rendered in using the users original preference, maybe i can store this in their session -->
-            <select name="languages" id="languages">
-                <option value="python">Python</option>
-                <option value="java">Java</option>
-            </select>
+                <!-- this might need to be a form. all questions are rendered in using the users original preference, maybe i can store this in their session -->
+                <select name="languages" id="languages">
+                    <option value="python">Python</option>
+                    <option value="java">Java</option>
+                </select>
 
-            <a href="https://some-bug-report-destination-probably-github/" target="blank">Report a Bug</a>
+                <a href="https://some-bug-report-destination-probably-github/" target="blank">Report a Bug</a>
 
-            <div class="editor" id="editor">
-                <!-- starting code needs to be placed here. this may be how to do it, not sure -->
-                <pre>{{ problem.starting_code }}</pre>
-            </div>
-
-            <div class="testcase-output">
-                <!-- logic for this needs to be implemented -->
-                <button hx-post="{% url 'problem_testcase_window' %}" hx-target="output-window" hx-trigger="click" hx-swap="innerHTML">Testcase</button>
-                <button hx-post="{% url 'problem_output_window' %}" hx-target="output-window" hx-trigger="click" hx-swap="innerHTML">Output</button>
-                
-                <div id="output-window">
-                    <!-- within this will be the testcases (1, 2, and/or 3) as well as the button to toggle between testcases -->
-                    <!-- if the user selects output, the testcase toggle buttons will remain, and the input, users output and expected output will be shown. if an error occurs, it will be shown -->
+                <div class="editor" id="editor">
+                    <!-- starting code needs to be placed here. have a script read from a hidden value containing the starting code and pass it into here -->
                 </div>
-                <!-- footer that holds the run/submit buttons -->
-                 <!-- logic for this needs to be implemented, not sure how to change the look of a button --> 
-                <button hx-post="{% url 'process_run_code' %}" hx-target="output-window" hx-trigger="click" hx-swap="innerHTML">Run</button>
-                <button hx-post="{% url 'process_submit_code' %}" hx-target="output-window" hx-trigger="click" hx-swap="innerHTML">Submit</button>
+
+                <div class="testcase-output">
+                    <!-- logic for this needs to be implemented -->
+                    <button hx-post="{% url 'problem_testcase_window' %}" hx-target="output-window" hx-trigger="click" hx-swap="innerHTML">Testcase</button>
+                    <button hx-post="{% url 'problem_output_window' %}" hx-target="output-window" hx-trigger="click" hx-swap="innerHTML">Output</button>
+                    
+                    <div id="output-window">
+                        <!-- within this will be the testcases (1, 2, and/or 3) as well as the button to toggle between testcases -->
+                        <!-- if the user selects output, the testcase toggle buttons will remain, and the input, users output and expected output will be shown. if an error occurs, it will be shown -->
+                    </div>
+
+                    <!-- passes relevand data to form then view -->
+                    <textarea id="code_input" name="code" style="display: none;"></textarea>
+                    <input type="hidden" id="language_id" name="language_id"/>
+                    <input type="hidden" id="problem_id" name="problem_id"/>
+                    <!-- footer that holds the run/submit buttons -->
+                    <!-- logic for this needs to be implemented, not sure how to change the look of a button --> 
+                    <button hx-post="{% url 'process_run_code' %}" hx-target="output-window" hx-trigger="click" hx-swap="innerHTML">Run</button>
+                    <button hx-post="{% url 'process_submit_code' %}" hx-target="output-window" hx-trigger="click" hx-swap="innerHTML">Submit</button>
+                </div>
+
+                <div id="results-panel"></div>
+
             </div>
-
-            <div id="results-panel"></div>
-
-        </div>
+        </form>
 
         <script src="src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
         <script>
