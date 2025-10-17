@@ -1,0 +1,5 @@
+<div id="console-footer">
+    <!-- this is a placeholder for now, until i find out how to do the animation-->
+    <!-- not sure if the "hx-trigger" is needed since the view returns the evaluation when its complete anyways -->
+    <div hx-get="{% url 'check_run_results' %}" hx-trigger="every 1s">Running</div>
+</div>

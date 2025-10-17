@@ -15,5 +15,11 @@ class SignUpForm(UserCreationForm):
 
 
 class LoginForm(forms.Form):
-    username = forms.CharField(max_length=200, required=True)
+    username = forms.CharField(max_length=100, required=True)
     password = forms.CharField(widget=forms.PasswordInput, required=True)
+
+class ChangeUsernameForm(forms.Form):
+    username = forms.CharField(max_length=100)
+
+class UploadProfilePictureForm(forms.Form):
+    picture = forms.ImageField()
