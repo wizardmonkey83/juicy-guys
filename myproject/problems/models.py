@@ -1,9 +1,11 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 # Create your models here.
 class Category(models.Model):
     # math, system-design, hashing, etc
     name = models.CharField(max_length=100)
+    image = models.ImageField()
 
 class Language(models.Model):
     name = models.CharField(max_length=100)
@@ -24,13 +26,27 @@ class Problem(models.Model):
     recommended_time_complexity = models.CharField(max_length=150)
     category = models.ForeignKey(Category, on_delete=models.PROTECT)
     language = models.ManyToManyField(Language, on_delete=models.CASCADE)
+    problem_solved_count = models.PositiveIntegerField(default=0)
+    submissions_made_count = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return self.title
+    
+    def calculate_acceptance_rate(self):
+        # TODO calculate the acceptance rate for a problem
+        acceptance_rate = self.problem_solved_count / self.submissions_made_count
+        return acceptance_rate
+    
+    @property
+    def acceptance_rate(self):
+        acceptance_rate = self.calculate_acceptance_rate()
+        return acceptance_rate
+
 
 class TestCase(models.Model):
     input_data = models.TextField()
     expected_output = models.TextField()
+    language = models.ManyToManyField(Language, on_delete=models.CASCADE)
     problem = models.ForeignKey(Problem, on_delete=models.CASCADE, related_name="testcases")
 
     def __str__(self):
@@ -49,4 +65,14 @@ class Solution(models.Model):
     time_complexity = models.CharField(max_length=150)
     code = models.TextField()
     description = models.TextField()
+
+class UserProblem(models.Model):
+    STATUS_CHOICES = [
+        ("blank", "Blank"),
+        ("attempted", "Attempted"),
+        ("solved", "Solved")
+    ]
+    status = models.CharField(choices=STATUS_CHOICES, default="blank", max_length=15)
+    problem = models.ForeignKey(Problem, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="problems")
 

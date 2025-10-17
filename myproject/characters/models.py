@@ -5,10 +5,18 @@ from problems.models import Category
 # Create your models here.
 
 class Character(models.Model):
+    STATUS_CHOICES = [
+        ("unknown", "Unknown"),
+        ("easy", "Easy"),
+        ("medium", "Medium"),
+        ("hard", "Hard"),
+        ("legendary", "Legendary"),
+    ]
     name = models.CharField(max_length=100)
     # a simulated biography 
     description = models.TextField()
     image = models.ImageField()
+    difficulty = models.CharField(choices=STATUS_CHOICES, default="unknown", max_length=20)
     # .PROTECT raises a warning if a cateogry linked to characters is deleted 
     category = models.ForeignKey(Category, on_delete=models.PROTECT)
 

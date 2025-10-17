@@ -1,0 +1,49 @@
+{% load static %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <link rel="stylesheet" href="{% static 'css/problems.css' %}">
+    <script src="https://unpkg.com/htmx.org@1.9.9"></script>
+    <script src="src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+    <title>Problem list</title>
+</head>
+<body>
+    <!-- "problem-list-container" will contain two sections vertically stacked. the "topic-section" and the "problem-list" -->
+    <main class="problem-list-container">
+
+        <!-- this is an expandable "header" where the use can select a certain topic (system design, DSA, etc). -->
+        <!-- it will begin collapsed, showing one row of topics. if the user presses an "expand" arrow, the rest of the topics will expand downwards. -->
+        <div class="topic-section">
+            {% for category in category.all %}
+                <!-- the image and title will be positioned side by side in "category-container" -->
+                <div class="category-container">
+                    <img src="{{ category.image }}" alt="Category Image">
+                    <div class="category-title">{{ category.name }}</div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="problem-list">
+            {% for problem in problem.all %}
+                <!-- user clicks this to take them to the problem. not sure if the "submit" functionality is correct. -->
+                <div class="problem-rectangle">
+                    <div class="problem-title">{{ problem.title }}</div>
+
+                    <!-- big gap between title and rest of elements. title is positioned to the left. everything below is to the right. -->
+                    <div class="problem-percentage">{{ problem.acceptance_rate }}</div>
+                    <div class="problem-difficulty">{{ problem.difficulty }}</div>
+                    <div class="problem-category">{{ problem.category }}</div>
+                    <!-- again, figure out how to check the acceptance status of a problem -->
+                    {% if problem.status %}
+                        <div class="problem-status">Solved</div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <!-- may need to include a multi-page functionality and load like 30 problems per page. or just load all on one page. -->
+        </div>
+
+    </main>
+</body>
