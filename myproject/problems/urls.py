@@ -1,7 +1,9 @@
 from django.urls import path
-from .views import process_run_code, problem_question_window, problem_solution_window, problem_submissions_window
+from .views import process_run_code, problem_question_window, problem_solution_window, problem_submissions_window, load_problem
 
 urlpatterns = [
+    path("problems/<int:problem_id>/", load_problem, name="load_problem")
+
     # performs execution (running and submission of code)
     path("problems/problem/run", process_run_code, name="process_run_code"),
 

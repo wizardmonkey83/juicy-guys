@@ -33,8 +33,10 @@ class Problem(models.Model):
         return self.title
     
     def calculate_acceptance_rate(self):
-        # TODO calculate the acceptance rate for a problem
-        acceptance_rate = self.problem_solved_count / self.submissions_made_count
+        if self.submissions_made_count > 0:
+            acceptance_rate = self.problem_solved_count / self.submissions_made_count
+        else:
+            acceptance_rate = 0
         return acceptance_rate
     
     @property

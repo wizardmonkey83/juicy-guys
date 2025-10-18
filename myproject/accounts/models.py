@@ -18,8 +18,16 @@ class Profile(models.Model):
     submissions_made_count = models.PositiveIntegerField(default=0)
     
     def calculate_acceptance_rate(self):
-        # TODO create logic for calculating acceptance rate
-        return 
+        if self.submissions_made_count > 0:
+            acceptance_rate = self.problems_solved_count / self.submissions_made_count
+        else:
+            acceptance_rate = 0
+        return acceptance_rate
+    
+    @property
+    def acceptance_rate(self):
+        acceptance_rate = self.calculate_acceptance_rate()
+        return acceptance_rate
 
     def __str__(self):
         return f"{self.user.username}'s Profile"

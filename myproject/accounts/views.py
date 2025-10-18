@@ -45,13 +45,18 @@ def login_view(request):
             if user is not None:
                 login(request, user)
                 return redirect("user_home")
+            else:
+                # not sure if this is the best method for displaying errors unless the message can pop up without reloading or taking the user to another page.
+                messages.error(request, "Invalid Username or Password")
             
     else:
         form = LoginForm()
     
     return render(request, "registration/login.html", {"form": form})
 
-        
+# CHANGING STUFF -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+@login_required
 def change_username(request):
     if request.method == "POST":
         form = ChangeUsernameForm(request.POST)
@@ -72,18 +77,17 @@ def change_username(request):
             # TODO implement logic for this
             messages.error(request, "Invalid Form")
 
+@login_required
 def upload_profile_picture(request):
     if request.method == "POST":
         form = UploadProfilePictureForm(request.POST)
         if form.is_valid():
             picture = form.cleaned_data["picture"]
-
-            # this may be too simple, might need to develop checks to make sure nothing bad happens
             user = request.user
-            user.profile_picture = picture
-            user.save()
 
-
+            user.profile.profile_picture.delete()
+            user.profile.profile_picture = picture
+            user.profile.save()
 
 
 @login_required
@@ -91,6 +95,7 @@ def logout_view(request):
     logout(request)
     return redirect("login")
 
+# TODO remember to have a confirmation page built into this ("Are you sure you want to delete your account")
 @login_required
 def delete_account(request):
     user = request.user
