@@ -1,13 +1,14 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Q, Subquery
+from django.http import HttpResponse
+from django.db.models import Q, Subquery, OuterRef
 import time
 import datetime
 
 
-from .forms import GetCode, PassProblemID
-from .models import TestCase, Problem, UserProblem, Language
+from .forms import GetCode, SearchForProblem, FilterProblemDifficulty
+from .models import TestCase, Problem, UserProblem, Language, Category, Quote
 
 from characters.models import Character, UserCharacter
 from accounts.models import Submission, Badge
@@ -390,21 +391,55 @@ def check_submit_results(request):
 
 
 
-# FOR LOADING FRAGMENTS ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
+# FOR LOADING FRAGMENTS/PAGES ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 @login_required
 def problem_list_window(request):
     user = request.user
-    all_problems_with_status = Problem.objects.annotate(solution_status=Subquery(UserProblem.objects.all().values("status").annotate(status))
+
+    categories = Category.objects.all()
+    # random quote
+    quote = Quote.objects.order_by("?").first()
+    # subqueries are essentially just like @property for views
+    # OuterRef makes sure the problem is the same between UserProblem and Problem. [:1] makes sure only one status per problem is returned, shouldnt be an issue but why not.
+    user_status_subquery = UserProblem.objects.filter(problem=OuterRef("pk"), user=user).values("status")[:1]
+    all_problems = Problem.objects.annotate(user_status=Subquery(user_status_subquery))
+
+    return render(request, "problems/problem_list.html", {"problems": all_problems, "categories": categories, "quote": quote})
+
+
 
 @login_required
-def load_problem(request):
+def load_problem(request, problem_id):
+    if request.method == "GET":
+        # realistically if this doesnt work the site is cooked
+        try:
+            problem = Problem.objects.get(id=problem_id)
+        except Problem.DoesNotExist:
+            messages.error(request, "Unable to locate problem")
+        return render(request, "problems/problem_page.html", {"problem": problem})
+    
+        
+@login_required
+def search_for_problem(request):
     if request.method == "POST":
-        form = PassProblemID(request.POST)
+        form = SearchForProblem(request.POST)
         if form.is_valid():
-            problem_id = form.cleaned_data["problem_id"]
-            try:
-                problem = Problem.objects.get(id=problem_id)
+            query = form.cleaned_data["query"]
+            problems = Problem.objects.filter(title__icontains=query)
+            return render(request, "problems/search_problems_fragment.html", {"problems": problems})
+    return HttpResponse("")
+
+@login_required
+def filter_problem_difficulty(request):
+    if request.method == "POST":
+        form = FilterProblemDifficulty(request.POST)
+        if form.is_valid():
+            difficulty = form.cleaned_data["difficulty"]
+            user = request.user
+            user_status_subquery = UserProblem.objects.filter(problem=OuterRef("pk"), user=user).values("status")[:1]
+            problems = Problem.objects.filter(difficulty=difficulty).annotate(user_status=Subquery(user_status_subquery))
+            return render(request, "problems/search_problems_fragment.html", {"problems": problems})
+    return HttpResponse("")
 
 
 

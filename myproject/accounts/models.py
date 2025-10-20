@@ -11,7 +11,7 @@ class Badge(models.Model):
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    badges = models.ManyToManyField(Badge, on_delete=models.PROTECT)
+    badges = models.ManyToManyField(Badge)
     
     profile_picture = models.ImageField(default="avatar.jpg", upload_to="profile_pictures")
     problems_solved_count = models.PositiveIntegerField(default=0)
@@ -19,7 +19,9 @@ class Profile(models.Model):
     
     def calculate_acceptance_rate(self):
         if self.submissions_made_count > 0:
-            acceptance_rate = self.problems_solved_count / self.submissions_made_count
+            acceptance_rate = self.problem_solved_count / self.submissions_made_count
+            acceptance_rate *= 100
+            acceptance_rate = round(acceptance_rate, 1)
         else:
             acceptance_rate = 0
         return acceptance_rate

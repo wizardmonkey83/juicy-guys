@@ -5,11 +5,17 @@ from django.contrib.auth.models import User
 class Category(models.Model):
     # math, system-design, hashing, etc
     name = models.CharField(max_length=100)
-    image = models.ImageField()
+    icon_filename = models.CharField(max_length=100, blank=True)
+
+    def __str__(self):
+        return self.name
 
 class Language(models.Model):
     name = models.CharField(max_length=100)
     judge0_id = models.PositiveIntegerField()
+
+    def __str__(self):
+        return self.name
 
 class Problem(models.Model):
     STATUS_CHOICES = [
@@ -25,7 +31,7 @@ class Problem(models.Model):
     starting_code = models.TextField()
     recommended_time_complexity = models.CharField(max_length=150)
     category = models.ForeignKey(Category, on_delete=models.PROTECT)
-    language = models.ManyToManyField(Language, on_delete=models.CASCADE)
+    language = models.ManyToManyField(Language)
     problem_solved_count = models.PositiveIntegerField(default=0)
     submissions_made_count = models.PositiveIntegerField(default=0)
 
@@ -35,6 +41,8 @@ class Problem(models.Model):
     def calculate_acceptance_rate(self):
         if self.submissions_made_count > 0:
             acceptance_rate = self.problem_solved_count / self.submissions_made_count
+            acceptance_rate *= 100
+            acceptance_rate = round(acceptance_rate, 1)
         else:
             acceptance_rate = 0
         return acceptance_rate
@@ -48,7 +56,7 @@ class Problem(models.Model):
 class TestCase(models.Model):
     input_data = models.TextField()
     expected_output = models.TextField()
-    language = models.ManyToManyField(Language, on_delete=models.CASCADE)
+    language = models.ManyToManyField(Language)
     problem = models.ForeignKey(Problem, on_delete=models.CASCADE, related_name="testcases")
 
     def __str__(self):
@@ -68,6 +76,9 @@ class Solution(models.Model):
     code = models.TextField()
     description = models.TextField()
 
+    def __str__(self):
+        return f"Solution for {self.problem.title}"
+
 class UserProblem(models.Model):
     STATUS_CHOICES = [
         ("blank", "Blank"),
@@ -78,3 +89,11 @@ class UserProblem(models.Model):
     problem = models.ForeignKey(Problem, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="problems")
 
+    def __str__(self):
+        return f"{self.user.username}'s copy of {self.problem.title}"
+
+class Quote(models.Model):
+    quote = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.quote

@@ -6,5 +6,8 @@ class GetCode(forms.Form):
     language_id = forms.IntegerField()
     custom_testcase = forms.CharField(max_length=300, required=False)
 
-class PassProblemID(forms.Form):
-    problem_id = forms.IntegerField()
+class SearchForProblem(forms.Form):
+    query = forms.CharField(max_length=200)
+
+class FilterProblemDifficulty(forms.Form):
+    difficulty = forms.CharField(max_length=20)
