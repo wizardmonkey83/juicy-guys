@@ -54,6 +54,7 @@ def process_run_code(request):
                     # usuing .get() instead of dict["key"] so a keyerror isnt raised if value is not present
                     stdin_string = testcase.get("input")
                     expected_output = testcase.get("output")
+                    print(f"STDIN_STRING: {stdin_string}")
 
                     try:
                         # the frontend renders the default stdin using single quotes, invalidating the JSON structure. this is then passed back here and the script tries to parse it but fails. this should fix it
@@ -216,20 +217,13 @@ def process_submit_code(request):
             if testcases:
                 tokens = []
                 for testcase in testcases:
-                    stdin_string = testcase.input_data
+                    stdin_dict = testcase.input_data
                     expected_output = testcase.expected_output
 
                     # script to prep submission for judge0
                     scaffolding_imports = "import sys\nimport json\nfrom typing import List, Dict, Set, Tuple, Optional\n"
                     class_name = problem.class_name
                     method_name = problem.method_name
-
-                    try:
-                        # the frontend renders the default stdin using single quotes, invalidating the JSON structure. this is then passed back here and the script tries to parse it but fails. this should fix it
-                        stdin_dict = ast.literal_eval(stdin_string)
-                    except (ValueError, SyntaxError):
-                        # problably already valid JSON
-                        stdin_dict = json.loads(stdin_string)
 
                     driver_script = textwrap.dedent(f"""
                     try:
@@ -242,7 +236,8 @@ def process_submit_code(request):
                         print(f"Execution error: {{error}}", file=sys.stderr)
                     """)
                     full_script_string  = scaffolding_imports + "\n" + source_code + "\n" + driver_script
-                    payload = {"source_code": full_script_string, "language_id": language_id, "stdin": json.dumps(stdin_dict), "expected_output": expected_output}
+                    valid_stdin_json = json.dumps(stdin_dict)
+                    payload = {"source_code": full_script_string, "language_id": language_id, "stdin": valid_stdin_json, "expected_output": expected_output}
                     
                     response = requests.post("http://159.203.137.178:2358/submissions", json=payload)
                     data = response.json()
@@ -282,7 +277,6 @@ def check_submit_results(request):
         # TODO fix this --> i think that you are iterating over all testcases, even if they have already been completed. this will be a major waste of time. 
         for item in pending_tokens:
             token = item["token"]
-            # "status_description" should be a valid field, but may not be
             response = requests.get(f'http://159.203.137.178:2358/submissions/{token}')
             data = response.json()
             status = data["status"]["id"]
@@ -323,7 +317,7 @@ def check_submit_results(request):
                 # runtime error 
                 stderr = data["stderr"]
                 status_description = data["status"]["description"]
-                return render(request, "problems/output_window.html", {"stderr": stderr, "status_description": status_description})
+                return render(request, "problems/page/output_window.html", {"stderr": stderr, "status_description": status_description})
             
         # submission completed (all testcases tested)  
         if finished_testcases == len(pending_tokens):
@@ -469,8 +463,15 @@ def check_submit_results(request):
             del request.session["problem_id"]
             del request.session["language_id"]
             del request.session["code"]
+
+            context = {
+                "results": results,
+                "submission_was_successful": True,
+                "problem_id": problem.id,
+                "language_id": language.judge0_id
+            }
             # TODO make an html fragment for this
-            return render(request, "problems/output_window.html", {"results": results})
+            return render(request, "problems/output_window.html", context)
 
         else:
             # keep polling

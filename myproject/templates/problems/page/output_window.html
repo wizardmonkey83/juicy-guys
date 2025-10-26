@@ -10,7 +10,7 @@
         </div>
         <div class="testcase-tabs">
         {% for result in results %}
-            <button id="result_{{ forloop.counter }}" type="button" class="testcase-tab {% if forloop.first %}active{% endif %}" data-input="{{ result.stdin }}" data-output="{{ result.expected_output }}" data-stdout="{{ result.stdout }}" data-status-description="{{ result.status_description }}">Case {{ forloop.counter }}</button>
+            <button id="result_{{ forloop.counter }}" type="button" class="testcase-tab {% if forloop.first %}active{% endif %}" data-input-display="{{ result.stdin|escapejs }}" data-output-display="{{ result.expected_output|escapejs }}" data-stdout-display="{{ result.stdout|escapejs }}" data-input="{{ result.stdin }}" data-output="{{ result.expected_output }}" data-stdout="{{ result.stdout }}" data-status-description="{{ result.status_description }}">Case {{ forloop.counter }}</button>
         {% endfor %}
         </div>
         <div class="result-content">
@@ -30,6 +30,21 @@
             </div>
         </div>
         <script>
+            // deleting code from localStorage if a user has solved problem
+        </script>
+        {% if submission_was_successful %}
+        <script>
+            try {
+                const problemId = '{{ problem_id }}';
+                const languageId = '{{ language_id }}';
+                let storageKey = `juicyguys_code_draft_${problemId}_${languageId}`;
+                localStorage.removeItem(storageKey);
+            } catch (e) {
+                console.error("Failed to remove draft from localStorage:", e);
+            }
+        </script>
+        {% endif %}
+        <script>
             const resultsContainer = document.getElementById("testcase-wrapper");
                 const resultTabs = resultsContainer.querySelectorAll('.testcase-tab');
                 // might need to be "var" instead of "const". can only get element by id using document
@@ -42,9 +57,9 @@
                             resultTabs.forEach(t => t.classList.remove("active"));
 
                             tab.classList.add("active");
-                            const resultInput = tab.getAttribute("data-output");
-                            const resultExpectedOutput = tab.getAttribute("data-output");
-                            const resultOutput = tab.getAttribute("data-stdout");
+                            const resultInput = tab.getAttribute("data-input-display");
+                            const resultExpectedOutput = tab.getAttribute("data-output-display");
+                            const resultOutput = tab.getAttribute("data-stdout-display");
                             const resultDescription = tab.getAttribute("data-status-description");
 
                             resultsInputArea.textContent = resultInput;
@@ -55,13 +70,11 @@
                     });
                 function populateTestcaseOnStart() {
                     const activeTab = testcaseContainer.querySelector(".testcase-tab.active");
-                    const resultInput = activeTab.getAttribute("data-input");
-                    const resultExpectedOutput = activeTab.getAttribute("data-output");
-                    const resultOutput = activeTab.getAttribute("data-stdout");
+                    const resultInput = activeTab.getAttribute("data-input-display");
+                    const resultExpectedOutput = activeTab.getAttribute("data-output-display");
+                    const resultOutput = activeTab.getAttribute("data-stdout-display");
 
-                    const resultsInputArea = document.getElementById("results-input-data");
-                    const resultsExpectedOutputArea = document.getElementById("results-expected-output");
-                    const resultsStdout = document.getElementById("results-stdout");
+                    
                     resultsInputArea.textContent = resultInput;
                     resultsExpectedOutputArea.textContent = resultExpectedOutput;
                     resultsStdout.textContent = resultOutput;
