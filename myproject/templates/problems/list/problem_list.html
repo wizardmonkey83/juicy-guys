@@ -4,12 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <link rel="stylesheet" href="{% static 'css/problems.css' %}">
+    <link rel="stylesheet" href="{% static 'css/problems/problem_list.css' %}">
     <script src="https://unpkg.com/htmx.org@1.9.9"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Jersey+10&display=swap" rel="stylesheet">
-    <title>Problem list</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+    <title>Problems</title>
 </head>
 <body>
     <!-- logic for this needs to be implemented. hrefs are placeholders. -->
@@ -42,17 +44,17 @@
             {% endfor %}
         </div>
 
-        <div class="filter-section">
+        <div class="problem-tags-container">
             <!-- left side -->
             <form>
                <input type="search" name="query" class="search-questions" placeholder="Search questions..." hx-post="{% url 'search_for_problem' %}" hx-trigger="keyup changed delay:500ms, search" hx-target="#problem-list" hx-swap="innerHTML">
             {% csrf_token %}
             </form>
             <form>
-                <button class="difficulty-tag" type="submit" hx-post="{% url 'filter_problem_difficulty' %}" value="easy" name="difficulty" hx-target="#problem-list" hx-swap="innerHTML">Easy</button>
-                <button class="difficulty-tag" type="submit" hx-post="{% url 'filter_problem_difficulty' %}" value="medium" name="difficulty" hx-target="#problem-list" hx-swap="innerHTML">Medium</button>
-                <button class="difficulty-tag" type="submit" hx-post="{% url 'filter_problem_difficulty' %}" value="hard" name="difficulty" hx-target="#problem-list" hx-swap="innerHTML">Hard</button>
-                <button class="difficulty-tag" type="submit" hx-post="{% url 'filter_problem_difficulty' %}" value="legendary" name="difficulty" hx-target="#problem-list" hx-swap="innerHTML">Legendary</button>
+                <button class="tag-item difficulty-easy" type="submit" hx-post="{% url 'filter_problem_difficulty' %}" value="easy" name="difficulty" hx-target="#problem-list" hx-swap="innerHTML">Easy</button>
+                <button class="tag-item difficulty-medium" type="submit" hx-post="{% url 'filter_problem_difficulty' %}" value="medium" name="difficulty" hx-target="#problem-list" hx-swap="innerHTML">Medium</button>
+                <button class="tag-item difficulty-hard" type="submit" hx-post="{% url 'filter_problem_difficulty' %}" value="hard" name="difficulty" hx-target="#problem-list" hx-swap="innerHTML">Hard</button>
+                <button class="tag-item difficulty-legendary" type="submit" hx-post="{% url 'filter_problem_difficulty' %}" value="legendary" name="difficulty" hx-target="#problem-list" hx-swap="innerHTML">Legendary</button>
             {% csrf_token %}
             </form>
 

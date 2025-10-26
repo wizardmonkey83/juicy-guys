@@ -1,0 +1,82 @@
+{% if solutions %}
+    {% for solution in solutions %}
+        <div class="solution-explanation">
+            <div class="solution-header">{{ solution.title }}</div>
+            <pre>{{ solution.description }}</pre>
+            <div class="complexity-container">
+                <span class="complexity-item">Time: <code>{{ solution.time_complexity }}</code></span>
+                <span class="complexity-item">Space: <code>{{ solution.space_complexity }}</code></span>
+            </div>
+        </div>
+
+        <div class="solution-code-container">
+            <div class="solution-language-tabs">
+                {% for code in solution.codes.all %}
+                    <button class="language-tab {% if forloop.first %}active{% endif %}" data-target-id="solution-code-{{ code.id }}">{{ code.language.name }}</button>
+                {% endfor %}
+            </div>
+
+            <div class="solution-code-content">
+                {% for code in solution.codes.all %}
+                    <div id="solution-code-{{ code.id }}" class="code-block {% if forloop.first %}active{% endif %}">
+                        <button class="copy-button" data-copy-target-id="code-text-{{ code.id }}">Copy</button>
+                        <pre><code id="code-text-{{ code.id }}" class="language-{{ code.language.name|lower }}">{{ code.code }}</code></pre>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+    
+    <script>
+        (function() {
+            Prism.highlightAll();
+            // tabs and code blocks
+            const container = document.getElementById('problem-content');
+            if (!container) return;
+
+            const tabs = container.querySelectorAll('.language-tab');
+            const codeBlocks = container.querySelectorAll('.code-block');
+            const copyButtons = container.querySelectorAll('.copy-button');
+
+            // toggle tab
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    codeBlocks.forEach(b => b.classList.remove('active'));
+
+                    tab.classList.add('active');
+                    const targetId = tab.getAttribute('data-target-id');
+                    const targetBlock = container.querySelector('#' + targetId);
+                    if (targetBlock) {
+                        targetBlock.classList.add('active');
+                    }
+                });
+            });
+
+            // copy Button
+            copyButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetId = button.getAttribute('data-copy-target-id');
+                    const codeElem = container.querySelector('#' + targetId);
+                    if (!codeElem) return;
+
+                    const codeText = codeElem.innerText;
+                    
+                    navigator.clipboard.writeText(codeText).then(() => {
+                        button.innerText = 'Copied!';
+                        setTimeout(() => {
+                            button.innerText = 'Copy';
+                        }, 2000);
+                    }).catch(err => {
+                        console.error('Failed to copy text: ', err);
+                    });
+                });
+            });
+        })();
+    </script>
+
+{% else %}
+    <div class="solution-explanation">
+        <p>No solutions are available for this problem yet.</p>
+    </div>
+{% endif %}

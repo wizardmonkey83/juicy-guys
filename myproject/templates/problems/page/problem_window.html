@@ -1,0 +1,53 @@
+<div class="problem-header">
+    <h1>{{ problem.title }}</h1>
+    {% if user_problem.status == "solved" %}
+        <span class="problem-status solved">Solved</span>
+    {% elif user_problem.status == "attempted" %}
+        <span class="problem-status attempted">Attempted</span>
+    {% endif %}
+</div>
+<div class="problem-tags-container">
+    <span class="tag-item difficulty-{{ problem.difficulty|lower }}">{{ problem.get_difficulty_display }}</span>
+    <span class="tag-item category-tag">{{ problem.category }}</span>
+</div>
+
+<!-- this needs to maintain structure -->
+<div class="problem-description">
+    <pre>{{ problem.description }}</pre>
+</div>
+
+<div class="problem-examples">
+    {% for example in examples %}
+        <div class="example-item">
+            <h3>Example {{ forloop.counter }}:</h3>
+            <p class="example-line">
+                <strong>Input:</strong> 
+                <code>{{ example.input_data }}</code>
+            </p>
+            <p class="example-line">
+                <strong>Output:</strong> 
+                <code>{{ example.output_data }}</code>
+            </p>
+            {% if example.explanation %}
+                <div class="example-explanation">
+                    <pre><strong>Explanation:</strong> {{ example.explanation }}</pre>
+                </div>
+            {% endif %}
+        </div>
+    {% endfor %}
+</div>
+
+{% if hints %}
+    {% for hint in hints %}
+        <div class="hint-container">
+            <details class="hint-details">
+                <summary class="hint-summary">
+                    Hint {{ forloop.counter }}
+                </summary>
+                <div class="hint-content">
+                    <pre>{{ hint.hint }}</pre>
+                </div>
+            </details>
+        </div>
+    {% endfor %}
+{% endif %}

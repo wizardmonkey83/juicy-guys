@@ -41,6 +41,7 @@ class Submission(models.Model):
     code = models.TextField()
     testcases_passed = models.PositiveIntegerField()
     num_of_testcases = models.PositiveIntegerField()
+    # message returned by judge0
     status = models.CharField(max_length=100)
     # this may be an incorrect format
     runtime = models.PositiveIntegerField()
@@ -49,7 +50,7 @@ class Submission(models.Model):
     date_submitted = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return 
+        return f"Submission for {self.problem.title} - {self.date_submitted}"
 
 
     

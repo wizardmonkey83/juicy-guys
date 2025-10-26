@@ -1,0 +1,135 @@
+<div id="console-tabs-container" class="panel-tabs console-tabs" hx-swap-oob="true">
+    <button hx-post="{% url 'problem_testcase_window' %}" hx-target="#console-window" hx-trigger="click" hx-swap="innerHTML">Test Case</button>
+    <button class="active" hx-post="{% url 'problem_output_window' %}" hx-target="#console-window" hx-trigger="click" hx-swap="innerHTML">Output</button>
+</div>
+<div id="testcase-wrapper" data-language-id="{{ language_id }}" class="testcase-wrapper">
+    {% if results %}
+        <div class="result-details">
+            <div id="result-overall-status" class="result-header {{ overall_status|lower }}">{{ overall_status }}</div>
+            <div id="result-passed-testcases" class="passed-testcases">{{ passed_testcases }}</div>
+        </div>
+        <div class="testcase-tabs">
+        {% for result in results %}
+            <button id="{{ result }}_{{ forloop.counter }}" type="button" class="testcase-tab {% if forloop.first %}active{% endif %}" data-stdin="{{ result.stdin }}" data-expected-output="{{ result.expected_output }}" data-stdout="{{ result.stdout }}" data-status-description="{{ result.status_description }}">Case {{ forloop.counter }}</button>
+        {% endfor %}
+        </div>
+        <div class="result-content">
+            <div class="result-input-group">
+                <label for="input-data">Input =</label>
+                <pre id="results-input-data" name="input-data" class="results-input"></pre>
+            </div>
+            <div class="result-input-group">
+                <label for="expected-output">Expected Output =</label>
+                <!-- this is poised to be an issue. you need to find out how to allocate certain display testcases that correlate to the examples shown in the problem description. maybe create a new model -->
+                <pre id="results-expected-output" name="expected-output" class="results-input"></pre>
+            </div>
+            <div class="result-input-group">
+                <label for="expected-output">Your Output =</label>
+                <!-- this is poised to be an issue. you need to find out how to allocate certain display testcases that correlate to the examples shown in the problem description. maybe create a new model -->
+                <pre id="results-stdout" name="stdout" class="results-input"></pre>
+            </div>
+        </div>
+        <script>
+            const resultsContainer = document.getElementById("testcase-wrapper");
+                const resultTabs = resultsContainer.querySelectorAll('.testcase-tab');
+                // might need to be "var" instead of "const". can only get element by id using document
+                const resultsInputArea = document.getElementById("results-input-data");
+                const resultsExpectedOutputArea = document.getElementById("results-expected-output");
+                const resultsStdout = document.getElementById("results-stdout");
+
+                resultTabs.forEach(tab => {
+                        tab.addEventListener("click", () => {
+                            resultTabs.forEach(t => t.classList.remove("active"));
+
+                            tab.classList.add("active");
+                            const resultInput = tab.getAttribute("data-stdin");
+                            const resultExpectedOutput = tab.getAttribute("data-expected-output");
+                            const resultOutput = tab.getAttribute("data-stdout");
+                            const resultDescription = tab.getAttribute("data-status-description");
+
+                            resultsInputArea.textContent = resultInput;
+                            resultsExpectedOutputArea.textContent = resultExpectedOutput;
+                            resultsStdout.textContent = resultOutput;
+
+                        });
+                    });
+                function populateTestcaseOnStart() {
+                    const activeTab = testcaseContainer.querySelector(".testcase-tab.active");
+                    const resultInput = activeTab.getAttribute("data-stdin");
+                    const resultExpectedOutput = activeTab.getAttribute("data-expected-output");
+                    const resultOutput = activeTab.getAttribute("data-stdout");
+
+                    const resultsInputArea = document.getElementById("results-input-data");
+                    const resultsExpectedOutputArea = document.getElementById("results-expected-output");
+                    const resultsStdout = document.getElementById("results-stdout");
+                    resultsInputArea.textContent = resultInput;
+                    resultsExpectedOutputArea.textContent = resultExpectedOutput;
+                    resultsStdout.textContent = resultOutput;
+                }
+                populateTestcaseOnStart();
+        </script>
+    {% else %}
+    <div class="result-details">
+        <div id="stderr-message" class="result-header-red">{{ stderr }}</div>
+    </div>
+    <div class="result-error-description">
+        <div class="error-description">{{ status_description }}</div>
+    </div>
+    <div class="result-content">
+            <div class="result-input-group">
+                <label for="input-data">Input =</label>
+                <pre id="results-input-data" name="input-data" class="results-input">{{ stdin }}</pre>
+            </div>
+            <div class="result-input-group">
+                <label for="expected-output">Expected Output =</label>
+                <!-- this is poised to be an issue. you need to find out how to allocate certain display testcases that correlate to the examples shown in the problem description. maybe create a new model -->
+                <pre id="results-expected-output" name="expected-output" class="results-input">{{ expected_output }}</pre>
+            </div>
+        </div>
+    <!-- javascript to highlight the line within the editor where the error occured -->
+    <script>
+        try {
+            const editor = ace.edit("editor");
+            const errorMessage = document.getElementById("stderr-message").textContent;
+        
+            const wrapper = document.getElementById("testcase-wrapper");
+            const languageId = wrapper.dataset.languageId; 
+
+            let regex;
+            switch (languageId) {
+                case '71': // python
+                    regex = /line (\d+)/;
+                    break;
+                case '62': // java
+                    regex = /java:(\d+)\)/;
+                    break;
+                default:
+                    regex = null;
+            }
+            if (regex) {
+                const match = errorMessage.match(regex);
+                if (match && match[1]) {
+                    const lineNumber = parseInt(match[1], 10);
+
+                    if (!isNaN(lineNumber) && lineNumber > 0) {
+                        const Range = ace.require("ace/range").Range;
+                        editor.session.removeAllMarkers();
+                    
+                        editor.session.addMarker(
+                            new Range(lineNumber - 1, 0, lineNumber - 1, 1000), "ace-error-line", "fullLine");
+                        editor.gotoLine(lineNumber);
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("Error highlighting line:", e);
+            // silent fail so ui doenst break
+        }
+    </script>
+    {% endif %}
+</div>
+<!-- restores buttons once result is returned -->
+<div id="action-buttons-wrapper" hx-swap-oob="true">
+    <button class="run-button-requires-code" hx-post="{% url 'process_run_code' %}" hx-target="#action-buttons-wrapper" hx-trigger="click" hx-swap="innerHTML">Run</button>
+    <button class="submit-button-requires-code" hx-post="{% url 'process_submit_code' %}" hx-target="#action-buttons-wrapper" hx-trigger="click" hx-swap="innerHTML">Submit</button>
+</div>

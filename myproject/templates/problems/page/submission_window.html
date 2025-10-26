@@ -1,0 +1,65 @@
+{% if submissions %}
+    {% for submission in submissions %}
+        <div class="solution-explanation">
+            {% if submission.status|lower == "accepted" %}
+                <div class="status-header-green">{{ submission.status }}</div>
+            {% else %}
+                <div class="status-header-red">{{ submission.status }}</div>
+            {% endif %}
+            <div class="complexity-container">
+                <span class="complexity-item">Testcases Passed: <code>{{ submission.testcases_passed }}/{{ submission.num_of_testcases }}</code></span>
+                <span class="complexity-item">Runtime: <code>{{ submission.runtime }}secs</code></span>
+                <span class="complexity-item">Memory: <code>{{ submission.memory }}MB</code></span>
+                <span class="complexity-item">Language: <code>{{ submission.language.name }}</code></span>
+                <span class="complexity-item">Date: <code>{{ submission.date_submitted }}</code></span>
+            </div>
+            
+        </div>
+
+        <div class="solution-code-container">
+            <div class="solution-code-content">
+                <div id="solution-code-{{ submission.id }}" class="code-block active">
+                    <button class="copy-button" data-copy-target-id="code-text-{{ submission.id }}">Copy</button>
+                    <pre><code id="code-text-{{ submission.id }}" class="language-{{ submission.language.name|lower }}">{{ submission.code }}</code></pre>
+                </div>
+            </div>
+        </div>
+
+        
+    {% endfor %}
+    
+    <script>
+        (function() {
+            Prism.highlightAll(); 
+            const container = document.getElementById('problem-content');
+            if (!container) return;
+
+            const codeBlocks = container.querySelectorAll('.code-block');
+            const copyButtons = container.querySelectorAll('.copy-button');
+            // copy Button
+            copyButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetId = button.getAttribute('data-copy-target-id');
+                    const codeElem = container.querySelector('#' + targetId);
+                    if (!codeElem) return;
+
+                    const codeText = codeElem.innerText;
+                    
+                    navigator.clipboard.writeText(codeText).then(() => {
+                        button.innerText = 'Copied!';
+                        setTimeout(() => {
+                            button.innerText = 'Copy';
+                        }, 2000);
+                    }).catch(err => {
+                        console.error('Failed to copy text: ', err);
+                    });
+                });
+            });
+        })();
+    </script>
+
+{% else %}
+    <div class="solution-explanation">
+        <p>No submissions have been made for this problem.</p>
+    </div>
+{% endif %}

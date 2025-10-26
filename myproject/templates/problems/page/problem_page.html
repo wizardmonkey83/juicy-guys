@@ -1,0 +1,346 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <link rel="stylesheet" href="{% static 'css/problems/problem_page.css' %}">
+    <script src="https://unpkg.com/htmx.org@1.9.9"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jersey+10&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js" defer></script>
+    <title>{{ problem.title }}</title>
+</head>
+<body>
+    <header class="main-header">
+        <div class="logo">Juicy Guys</div>
+        <nav class="main-nav">
+            <ul>
+                <li><a href=":()">Characters</a></li>
+                <li><a href="{% url 'problem_list_window' %}">Problems</a></li>
+                <li><a href=":()">Profile</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="problem-ide-wrapper">
+        <div id="problem-panel">
+            <div class="panel-container">
+                <div class="panel-tabs">
+                    <form>
+                        <button class="active" hx-post="{% url 'problem_problem_window' %}" hx-target="#problem-content" hx-trigger="click" hx-swap="innerHTML">Problem</button>
+                        <button hx-post="{% url 'problem_solution_window' %}" hx-target="#problem-content" hx-trigger="click" hx-swap="innerHTML">Solution</button>
+                        <button hx-post="{% url 'problem_submissions_window' %}" hx-target="#problem-content" hx-trigger="click" hx-swap="innerHTML">Submissions</button>
+                        <input type="hidden" name="problem_id" value="{{ problem.id }}"/>
+                        {% csrf_token %}
+                    </form>
+                </div>
+                <div id="problem-content" class="problem-content-area">
+                    <!-- logic needs to be implemented. when the user clicks on a problem (through a seperate problem page) the get directed to this page, passing the problem along with them -->
+                    <div class="problem-header">
+                        <h1>{{ problem.title }}</h1>
+                        {% if user_problem.status == "solved" %}
+                            <span class="problem-status solved">Solved</span>
+                        {% elif user_problem.status == "attempted" %}
+                            <span class="problem-status attempted">Attempted</span>
+                        {% endif %}
+                    </div>
+                    <div class="problem-tags-container">
+                        <span class="tag-item difficulty-{{ problem.difficulty|lower }}">{{ problem.get_difficulty_display }}</span>
+                        <span class="tag-item category-tag">{{ problem.category }}</span>
+                    </div>
+
+                    <!-- this needs to maintain structure -->
+                    <div class="problem-description">
+                        <pre>{{ problem.description }}</pre>
+                    </div>
+
+                    <div class="problem-examples">
+                        {% for example in examples %}
+                            <div class="example-item">
+                                <h3>Example {{ forloop.counter }}:</h3>
+                                <p class="example-line">
+                                    <strong>Input:</strong> 
+                                    <code>{{ example.input_data }}</code>
+                                </p>
+                                <p class="example-line">
+                                    <strong>Output:</strong> 
+                                    <code>{{ example.output_data }}</code>
+                                </p>
+                                {% if example.explanation %}
+                                    <div class="example-explanation">
+                                        <pre><strong>Explanation:</strong> {{ example.explanation }}</pre>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    {% if hints %}
+                        {% for hint in hints %}
+                            <div class="hint-container">
+                                <details class="hint-details">
+                                    <summary class="hint-summary">
+                                        Hint {{ forloop.counter }}
+                                    </summary>
+                                    <div class="hint-content">
+                                        <pre>{{ hint.hint }}</pre>
+                                    </div>
+                                </details>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="resizer" id="drag-handle"></div>
+
+        <!-- form to pass data if button is pressed. make sure only one button can be pressed at a time -->
+        <div class="editor-panel">
+            <form class="editor-form panel-container">
+                <div class="editor-header">
+                    <div class="editor-header-left">
+                        <select name="languages" id="languages" class="language-selector">
+                            <option data-judge0-id="71" value="python">Python</option>
+                            <option data-judge0-id="62" value="java">Java</option>
+                        </select>
+                    </div>
+                    <div class="editor-header-right">
+                        <a href="https://some-bug-report-destination-probably-github/" class="report-bug-button">Report a Bug</a>
+                    </div>
+                </div>
+
+                <div class="editor" id="editor"></div>
+                {% for code in problem_codes %}
+                    <textarea id="starting_code_{{ code.language.judge0_id }}" name="starting_code" style="display: none;">{{ code.starting_code }}</textarea>
+                {% endfor %}
+                
+                <!-- console has two parts, the header and the contents within the selected header button -->
+                <div class="console active">
+                    <div id="console-tabs-container" class="panel-tabs console-tabs">
+                        <!-- logic for this needs to be implemented, maybe -->
+                        <button class="active" hx-post="{% url 'problem_testcase_window' %}" hx-target="#console-window" hx-trigger="click" hx-swap="innerHTML">Test Case</button>
+                        <button hx-post="{% url 'problem_output_window' %}" hx-target="#console-window" hx-trigger="click" hx-swap="innerHTML">Output</button>
+                    </div>
+                    <div id="console-window" class="console-content">
+                        <!-- within this will be the testcases (1, 2, and/or 3) as well as the button to toggle between testcases -->
+                        <!-- if the user selects output, the testcase toggle buttons will remain, and the input, users output and expected output will be shown. if an error occurs, it will be shown -->
+                        <div id="testcase-wrapper" class="testcase-wrapper">
+                            <div class="testcase-tabs">
+                            {% for testcase in testcases %}
+                                <button id="{{ testcase.id }}" type="button" class="testcase-tab {% if forloop.first %}active{% endif %}" data-input="{{ testcase.input_data }}" data-output="{{ testcase.expected_output }}">Case {{ forloop.counter }}</button>
+                            {% endfor %}
+                            </div>
+                            <div class="testcase-content">
+                                <div class="testcase-input-group">
+                                    <label for="input-data">Input =</label>
+                                    <textarea id="custom-input-data" name="input-data" class="testcase-input"></textarea>
+                                </div>
+                                <div class="testcase-input-group">
+                                    <label for="expected-output">Expected Output =</label>
+                                    <!-- this is poised to be an issue. you need to find out how to allocate certain display testcases that correlate to the examples shown in the problem description. maybe create a new model -->
+                                    <textarea id="custom-expected-output" name="expected-output" class="testcase-input"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="console-footer">
+                    <button class="console-button" type="button">Console</button>
+                    <div id="action-buttons-wrapper" class="action-buttons">
+                        <button class="run-button-requires-code" hx-post="{% url 'process_run_code' %}" hx-target="#action-buttons-wrapper" hx-trigger="click" hx-swap="innerHTML">Run</button>
+                        <button class="submit-button-requires-code" hx-post="{% url 'process_submit_code' %}" hx-target="#action-buttons-wrapper" hx-trigger="click" hx-swap="innerHTML">Submit</button>
+                    </div>
+                </div>
+
+                <textarea id="code_input" name="code" style="display: none;"></textarea>
+                <textarea id="testcases" name="custom_testcases" style="display: none;"></textarea>
+                <input type="hidden" id="language_id" name="language_id" value="71"/>
+                <input type="hidden" id="problem_id" name="problem_id" value="{{ problem.id }}"/>
+                {% csrf_token %}
+            </form>
+        </div>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
+    <script>
+        //   ace editor -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/");
+
+        var editor = ace.edit("editor");
+        editor.setTheme("ace/theme/tomorrow_night");
+        // the language may need to be dynamic
+        editor.session.setMode("ace/mode/python");
+        // places the starting code
+        var startingCode = document.getElementById("starting_code_71").value;
+        editor.setValue(startingCode, -1);
+
+        // testcase tabbing -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        const testcaseContainer = document.getElementById("testcase-wrapper");
+        const testcaseTabs = testcaseContainer.querySelectorAll('.testcase-tab');
+        // might need to be "var" instead of "const". can only get element by id using document
+        const inputArea = document.getElementById("custom-input-data");
+        const outputArea = document.getElementById("custom-expected-output");
+
+        testcaseTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    testcaseTabs.forEach(t => t.classList.remove('active'));
+
+                    tab.classList.add('active');
+                    const testcaseInput = tab.getAttribute('data-input');
+                    const testcaseOutput = tab.getAttribute('data-output');
+
+                    inputArea.value = testcaseInput;
+                    outputArea.value = testcaseOutput;
+                });
+            });
+        function populateTestcaseOnStart() {
+            const activeTab = testcaseContainer.querySelector('.testcase-tab.active');
+            const testcaseInput = activeTab.getAttribute('data-input');
+            const testcaseOutput = activeTab.getAttribute('data-output');
+            inputArea.value = testcaseInput;
+            outputArea.value = testcaseOutput;
+        }
+        populateTestcaseOnStart();
+
+        // save user edited input (if they made edits to testcase) ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        inputArea.addEventListener("input", function() {
+            const activeTab = testcaseContainer.querySelector('.testcase-tab.active');
+            testcaseContainer.querySelector('.testcase-tab.active');
+            const newText = inputArea.value; 
+            if (activeTab) {
+                activeTab.dataset.input = newText;
+            }
+        });
+
+        outputArea.addEventListener("input", function() {
+            const activeTab = testcaseContainer.querySelector('.testcase-tab.active');
+            testcaseContainer.querySelector('.testcase-tab.active');
+            const newText = outputArea.value;
+            if (activeTab) {
+                activeTab.dataset.output = newText;
+            }
+        });
+
+        // changing languages ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        const languageSelector = document.getElementById("languages");
+        languageSelector.onchange = function changeLanguage() {
+            // changes hidden language_id field
+            const hiddenLanguage = document.getElementById("language_id");
+            const selectedOption = languageSelector.options[languageSelector.selectedIndex];
+            const judge0_id = selectedOption.dataset.judge0_id;
+            hiddenLanguage.value = judge0_id;
+
+            // changes code in editor and theme of editor
+            const newLanguage = languageSelector.value;
+            editor.session.setMode("ace/mode/" + newLanguage);
+            switch (newLanguage) {
+                case "python":
+                    var startingCode = document.getElementById("starting_code_71").value;
+                    editor.setValue(startingCode, -1);
+                    break
+                case "java": 
+                    var startingCode = document.getElementById("starting_code_62").value;
+                    editor.setValue(startingCode, -1);
+                    break
+            }
+            
+        }
+
+        // code submission -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        document.body.addEventListener('htmx:configRequest', function(evt) {
+            // looks for classes instead of form for triggering request. dont know why i used form previously
+            const hasClass = (evt.target.classList.contains("run-button-requires-code") || evt.target.classList.contains("submit-button-requires-code"));
+            const form = document.querySelector(".editor-form");
+            if (hasClass) {
+                const editorContent = editor.getValue();
+                // might need to use a more specific selector if multiple forms get added
+                evt.detail.parameters['code'] = editorContent;
+                // loops through all testcases and adds them to the form. an array is easier to build than a json object
+                let testcases = [];
+                const allTabButtons = document.querySelectorAll('.testcase-tab');
+                allTabButtons.forEach(tab => {
+                    const testcaseInput = tab.getAttribute('data-input');
+                    const testcaseOutput = tab.getAttribute('data-output');
+                    let newTestcase = {input: testcaseInput, output: testcaseOutput};
+                    testcases.push(newTestcase);
+                })
+                evt.detail.parameters['custom_testcases'] = JSON.stringify(testcases);
+
+            } else {
+                return;
+            }
+        });
+
+
+
+        // resizes panels ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        const resizer = document.getElementById('drag-handle');
+        const leftPanel = document.getElementById('problem-panel');
+        const wrapper = resizer.parentElement;
+        // when i click 
+        resizer.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            window.addEventListener('mousemove', resize);
+            window.addEventListener('mouseup', stopResize);
+        });
+        function resize(e) {
+            const wrapperRect = wrapper.getBoundingClientRect();
+            const newLeftWidth = e.clientX - wrapperRect.left;
+
+            if (newLeftWidth >= 300) {
+                // updates the grid-template-columns property
+                wrapper.style.gridTemplateColumns = `${newLeftWidth}px 5px 1fr`;
+            }
+        }
+        
+        // so that when the "click" is released, the panels stop resizing
+        function stopResize() {
+            window.removeEventListener('mousemove', resize);
+            window.removeEventListener('mouseup', stopResize);
+        }
+        // problem panel toggling --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        (function() {
+            // simpler version of tab toggling. couldnt reuse the script in solution window since nothing needs to appear/disappear
+            const mainTabsContainer = document.querySelector('#problem-panel .panel-tabs form');
+
+            if (mainTabsContainer) {
+                mainTabsContainer.addEventListener('click', function(e) {
+                    // the only thing to click are buttons but better safe than sorry
+                    if (e.target.tagName === 'BUTTON') {
+                        // select all buttons
+                        const buttons = mainTabsContainer.querySelectorAll('button');
+                        // remove underscore
+                        buttons.forEach(btn => {
+                            btn.classList.remove('active');
+                        });
+                        // att active to the one thats clicked 
+                        e.target.classList.add('active');
+                    }
+                });
+            }
+        })();
+        const consoleButton = document.querySelector('.console-button');
+        const consolePanel = document.querySelector('.console');
+
+        if (consoleButton && consolePanel) {
+            consoleButton.addEventListener('click', function() {
+                consolePanel.classList.toggle('hidden');
+                
+                consoleButton.classList.toggle('active');
+            });
+        }
+    </script>
+</body>
+</html>

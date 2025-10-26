@@ -1,0 +1,826 @@
+/* this general stuff needs to be added to a main.css file of sorts, fine for now */
+body {
+    background-color: #1A1A1A;
+    color: #EFEFEF;
+    font-family: "Jersey 10", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    margin: 0;
+    padding: 0;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* navbar */
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 2rem;
+    background-color: #252525;
+    border-bottom: 1px solid #3a3a3a;
+}
+/* text logo for now, might add a logo, not sure */
+.logo {
+    font-size: 1.5rem;
+    font-weight: 100;
+}
+
+.main-nav ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 2rem;
+}
+
+.main-nav a {
+    font-size: 1rem;
+    color: #a7a7a7;
+    transition: color 0.2s ease-in-out;
+}
+
+.main-nav a:hover {
+    color: #efefef;
+}
+/*  figure out how to get a line to appear under page user is on  */
+.main-nav.active {
+    border-bottom: 2px #00B8A3;
+}
+
+.problem-difficulty.easy, .difficulty-tag[value="easy"] { color: #00B8A3; }
+.problem-difficulty.medium, .difficulty-tag[value="medium"], .problem-status.attempted { color: #FFC01E; }
+.problem-difficulty.hard, .difficulty-tag[value="hard"] { color: #FF375F; }
+.problem-difficulty.legendary, .difficulty-tag[value="legendary"] { color: #9750DD; }
+
+.problem-status.solved {
+    color: #00B8A3;
+    font-weight: bold;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden; /* Prevents the whole page from scrolling */
+}
+
+body {
+    background-color: #1A1A1A;
+    color: #EFEFEF;
+    font-family: "Jersey 10", sans-serif;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-header {
+    flex-shrink: 0; 
+}
+
+
+.problem-tags-container {
+    display: flex;
+    flex-wrap: wrap; 
+    gap: 0.5rem;      
+    margin-bottom: 1.5rem; 
+}
+
+.tag-item {
+    display: inline-block;
+    padding: 0.25rem 0.75rem; 
+    border-radius: 20px;     
+    background-color: #3a3a3a; 
+    color: #efefef;           
+    font-size: 0.9rem;
+    line-height: 1.4;
+    font-family: inherit;
+    font-weight: 400;
+}
+
+.tag-item.difficulty-easy { 
+    color: #00B8A3; 
+}
+.tag-item.difficulty-medium { 
+    color: #FFC01E; 
+}
+.tag-item.difficulty-hard { 
+    color: #FF375F;
+}
+.tag-item.difficulty-legendary { 
+    color: #9750DD;
+}
+
+
+.tag-item.category-tag {
+    color: #efefef; 
+    background-color: #3a3a3a;
+}
+
+
+.problem-ide-wrapper {
+    flex-grow: 1;
+    display: grid; 
+    grid-template-columns: 1fr 5px 1fr;
+    min-height: 0; 
+    padding: 1rem; 
+    gap: .5rem; 
+}
+
+
+#problem-panel, #editor-panel {
+    display: flex; 
+    flex-direction: column;
+    min-width: 300px;
+    min-height: 0;
+}
+
+
+.resizer {
+    background-color: transparent; 
+    cursor: col-resize;
+    position: relative;
+}
+
+
+
+.panel-container {
+    width: 100%;
+    height: 100%;
+    background-color: #252525;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; 
+}
+
+.problem-content-area {
+    padding: 1.5rem;
+    overflow-y: auto; 
+    flex-grow: 1;
+    scrollbar-width: thin;
+    scrollbar-color: #555 #252525;
+}
+
+.problem-content-area::-webkit-scrollbar {
+    width: 12px;
+}
+
+.problem-content-area::-webkit-scrollbar-track {
+    background: #252525; 
+    border-radius: 8px;
+}
+
+.problem-content-area::-webkit-scrollbar-thumb {
+    background-color: #555; 
+    border-radius: 10px;
+    border: 3px solid #252525; 
+}
+
+.problem-content-area::-webkit-scrollbar-thumb:hover {
+    background-color: #777; 
+}
+
+.panel-tabs {
+    display: flex;
+    gap: 1rem;
+    border-bottom: 1px solid #3a3a3a;
+    padding: 0 1.5rem;
+    flex-shrink: 0;
+}
+.panel-tabs button {
+    background: none;
+    border: none;
+    color: #a7a7a7;
+    padding: 1rem 0.5rem;
+    cursor: pointer;
+    font-size: 1rem;
+    font-family: inherit;
+    border-bottom: 2px solid transparent;
+}
+.panel-tabs button:hover {
+    color: #efefef;
+}
+.panel-tabs button.active {
+    color: #efefef;
+    border-bottom-color: #00B8A3;
+}
+
+.editor-form {
+    height: 100%;
+}
+
+
+.editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center; 
+    padding: 0.8rem 1rem; 
+    background-color: #1e1e1e;
+    border-bottom: 1px solid #3a3a3a; 
+}
+
+
+.report-bug-button {
+    text-decoration: none;
+    color: #efefef; 
+    background-color: #3a3a3a;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    transition: background-color 0.2s ease; 
+}
+
+.report-bug-button:hover {
+    background-color: #4a4a4a;
+}
+
+.language-selector {
+    background-color: #3a3a3a;
+    color: #efefef;
+    border: none;
+    border-radius: 6px;
+    padding: 0.4rem 2rem 0.4rem 0.8rem; 
+    font-family: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+
+    background-image: url("data:image/svg+xml;charset=UTF8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%2712%27%20height%3D%2712%27%20viewBox%3D%270%200%2012%2012%27%3E%3Cpath%20fill%3D%27%23EFEFEF%27%20d%3D%27M6%209L0%203h12L6%209z%27%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 10px 10px;
+}
+
+.editor {
+    min-height: 0; 
+    flex-grow: 1;   
+    flex-shrink: 1; 
+    flex-basis: 50%;
+}
+
+
+.console {
+    border-top: 1px solid #3a3a3a;
+    display: flex;
+    flex-direction: column;
+    
+    flex-grow: 1;   
+    flex-shrink: 1; 
+    flex-basis: 50%;
+    min-height: 150px;
+}
+.console-content {
+    padding: 1rem;
+    min-height: 100px;
+    flex-grow: 1;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #555 #252525;
+}
+.console-content::-webkit-scrollbar {
+    width: 12px;
+}
+
+.console-content::-webkit-scrollbar-track {
+    background: #252525;
+    border-radius: 8px;
+}
+
+.console-content::-webkit-scrollbar-thumb {
+    background-color: #555;
+    border-radius: 10px;
+    border: 3px solid #252525;
+}
+
+.console-content::-webkit-scrollbar-thumb:hover {
+    background-color: #777;
+}
+
+.console-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    background-color: #1e1e1e;
+    border-top: 1px solid #3a3a3a;
+    flex-shrink: 0; 
+}
+
+
+.run-button-requires-code, .submit-button-requires-code, .console-button {
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    font-family: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.console.hidden {
+    display: none;
+}
+
+
+.console-button {
+    background-color: #3a3a3a;
+    color: #efefef;
+    transition: background-color 0.2s ease;
+}
+
+.console-button:hover {
+    background-color: #4a4a4a;
+}
+
+
+.console-button.active {
+    background-color: #555; 
+    box-shadow: inset 0 1px 4px rgba(0,0,0,0.2);
+}
+
+.submit-button-requires-code {
+    background-color: #00B8A3;
+    color: #1A1A1A;
+}
+
+.testcase-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem; 
+}
+
+
+.testcase-tab {
+    font-family: "DM Sans", sans-serif;
+    font-size: 0.7rem;
+    background-color: #3a3a3a; 
+    color: #a7a7a7; 
+    border: none;
+    border-radius: 6px; 
+    padding: 0.4rem 0.8rem;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.testcase-tab:hover {
+    background-color: #4a4a4a;
+    color: #efefef;
+}
+
+.testcase-tab.active {
+    background-color: #555; 
+    color: #efefef; 
+    box-shadow: inset 0 1px 4px rgba(0,0,0,0.2);
+}
+
+
+.testcase-input-group {
+    display: flex;
+    flex-direction: column; 
+    gap: 0.5rem; 
+    margin-bottom: 1rem;
+}
+
+.testcase-input-group label {
+    font-family: "DM Sans", sans-serif;
+    font-weight: 700;
+    color: #efefef; 
+    font-size: .7rem;
+}
+
+
+.testcase-input {
+    font-family: "Source Code Pro", monospace; 
+    font-size: 0.7rem;
+    line-height: 1.5;
+    color: #c9c9c9; 
+    background-color: #1e1e1e; 
+    border: 1px solid #3a3a3a; 
+    border-radius: 6px;
+    padding: 0.75rem;
+    width: 100%;
+    box-sizing: border-box; 
+    min-height: 80px;
+    resize: vertical; 
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.testcase-input:focus {
+    border-color: #a7a7a7;
+}
+
+.problem-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+.problem-header h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 100;
+}
+.problem-description pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: "DM Sans", sans-serif;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #efefef;
+}
+
+.problem-examples {
+    margin-top: 2rem; 
+}
+
+.example-item {
+    margin-bottom: 2rem; 
+    padding-left: 0.5rem; 
+}
+
+.example-item h3 {
+    font-family: "Jersey 10", sans-serif; 
+    font-size: 1.75rem; 
+    font-weight: 100; 
+    color: #efefef;
+    margin-bottom: 1rem;
+}
+
+.example-line {
+    font-family: "DM Sans", sans-serif;
+    font-size: 1rem;
+    color: #efefef;
+    margin: 0.5rem 0;
+}
+
+.example-line strong,
+.example-explanation strong {
+    font-weight: 700; 
+    color: #efefef; 
+}
+
+.example-line code {
+    font-family: "Source Code Pro", monospace;
+    background-color: #1e1e1e; 
+    border-radius: 4px;
+    padding: 0.1rem 0.4rem;
+    margin-left: 0.5rem; 
+}
+
+
+.example-explanation {
+    margin-top: 0.5rem;
+}
+
+.example-explanation pre {
+    font-family: "Source Code Pro", monospace; 
+    font-size: 1rem;
+    color: #efefef;          
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    margin: 0;
+    padding: 0;
+}
+
+
+.example-explanation pre strong {
+    font-family: "DM Sans", sans-serif;
+    font-weight: 700;                 
+    color: #efefef;                  
+}
+
+.hint-container {
+    margin-top: 2rem;
+}
+
+.hint-details {
+    background-color: #252525;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    overflow: hidden; 
+}
+
+.hint-summary {
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: #efefef;
+    list-style: revert; 
+}
+
+.hint-summary::-webkit-details-marker {
+    color: #a7a7a7;
+}
+.hint-summary:focus {
+    outline: none;
+}
+
+.hint-content {
+    padding: 1.5rem;
+    border-top: 1px solid #3a3a3a;
+}
+
+.hint-content pre {
+    font-family: "DM Sans", sans-serif; 
+    font-size: 1rem;
+    color: #efefef;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    margin: 0;
+    padding: 0;
+}
+
+.solution-header {
+    font-family: "Jersey 10", sans-serif;
+    font-size: 1.75rem;
+    font-weight: 400;
+    color: #efefef;
+    margin-bottom: 1rem;
+}
+
+.status-header-green {
+    font-family: "Jersey 10", sans-serif;
+    font-size: 1.75rem;
+    font-weight: 400;
+    color: #06b400;
+    margin-bottom: 1rem;
+    
+}
+
+.status-header-red {
+    font-family: "Jersey 10", sans-serif;
+    font-size: 1.75rem;
+    font-weight: 400;
+    color: #b40000;
+    margin-bottom: 1rem;
+    
+}
+
+/* explanation section */
+.solution-explanation pre {
+    font-family: "DM Sans", sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #efefef;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    margin-bottom: 1rem;
+}
+
+.complexity-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.complexity-item {
+    font-family: "DM Sans", sans-serif;
+    font-size: 1rem;
+    color: #efefef;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.complexity-item code {
+    font-family: "Source Code Pro", monospace;
+    background-color: #1e1e1e;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    color: #efefef;
+    font-size: 0.95rem;
+}
+
+/* solution part */
+.solution-code-container {
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    overflow: hidden; 
+    background-color: #2D2D2D;
+    margin-bottom: 2rem;
+}
+
+/* tab bar. this will come in handy i assume.  */
+.solution-language-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    border-bottom: 1px solid #3a3a3a;
+    background-color: #252525;
+    padding: 0 0.5rem;
+}
+
+.language-tab {
+    font-family: "DM Sans", sans-serif;
+    background: none;
+    border: none;
+    color: #a7a7a7;
+    padding: 0.75rem 1.25rem;
+    cursor: pointer;
+    font-size: 1rem;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+    white-space: nowrap;
+}
+
+.language-tab:hover {
+    color: #efefef;
+}
+
+.language-tab.active {
+    color: #efefef;
+    border-bottom-color: #00B8A3;
+}
+
+
+.solution-code-content {
+    position: relative; 
+}
+
+
+.code-block {
+    display: none;
+}
+
+
+.code-block.active {
+    display: block;
+    position: relative; 
+}
+
+
+.code-block pre {
+    font-family: "Source Code Pro", monospace;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    padding: 1.5rem;
+    margin: 0;
+    color: #efefef;
+    white-space: pre; 
+    overflow-x: auto; 
+}
+
+.code-block pre code {
+    padding: 0;
+    margin: 0;
+    background: none;
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+.copy-button {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10;
+    background-color: #3a3a3a;
+    color: #efefef;
+    border: none;
+    border-radius: 6px;
+    padding: 0.4rem 0.8rem;
+    font-family: "DM Sans", sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    opacity: 0; 
+    transition: opacity 0.2s, background-color 0.2s;
+}
+
+
+.code-block.active:hover .copy-button {
+    opacity: 1;
+}
+
+.copy-button:hover {
+    background-color: #4a4a4a;
+}
+
+.result-details {
+    margin-bottom: 1.5rem; 
+}
+
+.result-header {
+    font-family: "Jersey 10", sans-serif;
+    font-size: 1.75rem;
+    font-weight: 400;
+    margin-bottom: 0.5rem;
+}
+
+.result-header.accepted {
+    color: #06b400;
+}
+.result-header.wrong-answer,
+.result-header.runtime-error,
+.result-header.time-limit-exceeded,
+.result-header.compilation-error {
+    color: #b40000;
+}
+
+.result-header-red {
+    font-family: "Jersey 10", sans-serif;
+    font-size: 1.75rem;
+    font-weight: 400;
+    color: #b40000;
+    margin-bottom: 1rem;
+}
+
+.passed-testcases {
+    font-family: "DM Sans", sans-serif;
+    font-size: 1.1rem;
+    color: #a7a7a7; 
+}
+
+.result-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.result-input-group label {
+    font-family: "DM Sans", sans-serif;
+    font-weight: 700;
+    color: #efefef;
+    font-size: .7rem; 
+}
+
+.results-input {
+    font-family: "Source Code Pro", monospace;
+    font-size: 0.7rem;
+    line-height: 1.5;
+    color: #c9c9c9;
+    background-color: #1e1e1e;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    padding: 0.75rem;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 80px;
+    margin: 0; 
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.result-error-description {
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    background-color: rgba(180, 0, 0, 0.1);
+    border-radius: 6px;
+}
+
+.error-description {
+    font-family: "Source Code Pro", monospace;
+    font-size: 0.9rem;
+    color: #efefef;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.ace-error-line {
+    position: absolute;
+    background: rgba(180, 0, 0, 0.3); 
+    z-index: 20;
+}
+
+.running-animation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    font-family: "DM Sans", sans-serif;
+    font-size: 0.9rem;
+    color: #a7a7a7;
+    background-color: #252525;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    width: 130px; 
+    margin-left: auto; 
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 1; }
+}
+
+.running-animation .dot {
+    animation: blink 1.4s infinite;
+}
+
+.running-animation .dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.running-animation .dot:nth-child(3) {
+    animation-delay: 0.4s;
+}

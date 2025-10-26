@@ -2,13 +2,14 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponse
-from django.db.models import Q, Subquery, OuterRef
+from django.db.models import Q, Subquery, OuterRef,Prefetch
 import time
 import datetime
+import json
 
 
-from .forms import GetCode, SearchForProblem, FilterProblemDifficulty
-from .models import TestCase, Problem, UserProblem, Language, Category, Quote
+from .forms import GetCode, SearchForProblem, FilterProblemDifficulty, PassProblemID
+from .models import TestCase, Problem, UserProblem, Language, Category, Quote, Example, Hint, Solution, SolutionCode, ExampleTestcase, ProblemCode
 
 from characters.models import Character, UserCharacter
 from accounts.models import Submission, Badge
@@ -17,8 +18,9 @@ import requests
 # Create your views here.
 
 
-# FOR RUNNING THE CODE ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# TODO make this @login_required once done testing or once user auth is set up
+# RUNNING THE CODE ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+@login_required
 def process_run_code(request):
     if request.method == "POST":
         form = GetCode(request.POST)
@@ -27,59 +29,70 @@ def process_run_code(request):
             source_code = form.cleaned_data["code"]
             problem_id = form.cleaned_data["problem_id"]
             language_id = form.cleaned_data["language_id"]
+            custom_testcases = form.cleaned_data["custom_testcases"]
+            print(f"SOURCE CODE: {source_code}")
 
             try:
                 problem = Problem.objects.get(id=problem_id)
             except Problem.DoesNotExist:
                 # TODO figure out html fragment to be returned with error messages
                 messages.error(request, "Unable to Locate Problem")
-                return render(request, "problems/problem_run_response.html")
-
-            try:
-                language = Language.objects.get(judge0_id=language_id)
-            except Language.DoesNotExist:
-                messages.error(request, "Unable to locate language")
-            # TODO figure out how to allow a user to add/edit displayed testcases. right now this is fine.
-            few_testcases = TestCase.objects.filter(problem=problem, language=language)[:3]
+                return render(request, "problems/page/problem_run_response.html")
+            # this should work
+            few_testcases = json.loads(custom_testcases)
 
             if few_testcases:
                 tokens = []
                 for testcase in few_testcases:
-                    stdin = testcase.input_data
-                    expected_output = testcase.expected_output
+                    # usuing .get() instead of dict["key"] so a keyerror isnt raised if value is not present
+                    stdin = testcase.get("input")
+                    expected_output = testcase.get("output")
                     
-                    response = requests.post("http://localhost:2358/submissions", json={"source_code": source_code, "language_id": language_id, "stdin": stdin, "expected_output": expected_output})
+                    response = requests.post("http://159.203.137.178:2358/submissions", json={"source_code": source_code, "language_id": language_id, "stdin": stdin, "expected_output": expected_output})
                     data = response.json()
                     token = data["token"]
                     tokens.append(
-                        {"testcase_id": testcase.id,
-                         "token": token}
+                        {"token": token,
+                         "stdin": stdin,
+                         "expected_output": expected_output}
                     )
                 request.session["tokens"] = tokens
+                request.session["run_language_id"] = language_id
                 # TODO pass information to frontend to begin polling check_run_results. should be a button changed from "run" to "running" or an icon change
-                return render(request, "running.html")
+                return render(request, "problems/page/running.html")
             else:
                 messages.error(request, "No Testcases Found")
-                return render(request, "problems/problem_run_response.html") 
+                return render(request, "problems/page/problem_run_response.html") 
         else:
             # form is invalid
-            messages.error(request, "Invalid Form")
-            return render(request, "problems/problem_run_response.html")
+            errors = form.errors
+            messages.error(request, f"Errors: {errors}")
+            return render(request, "problems/page/problem_run_response.html")
+    else:
+        # method is invalid
+        messages.error(request, "Invalid Request Method")
+        return render(request, "problems/page/problem_run_response.html")
             
-# TODO make this @login_required once done testing or once user auth is set up
+
 # this function gets polled repeatedly by the frontend
+@login_required
 def check_run_results(request):
     tokens = request.session.get("tokens")
-    pending_tokens = tokens[:]
+    language_id = request.session.get("run_language_id")
     if tokens:
+        pending_tokens = tokens[:]
         results = []
         finished_testcases = 0
+        correct = 0
         for item in pending_tokens:
             token = item["token"]
+            stdin = item["stdin"]
+            expected_output = item["expected_output"]
             # "status_description" should be a valid field, but may not be
-            response = requests.get(f'http://localhost:2358/submissions/{token}?fields=stdout,stderr,status_id,status_description,language_id,time')
+            response = requests.get(f'http://159.203.137.178:2358/submissions/{token}')
             data = response.json()
-            status = data["status_id"]
+            print(f"JUDGE0 RESPONSE: {data}")
+            status = data["status"]["id"]
             # still processing
             if status == 1 or status == 2:
                 continue
@@ -87,45 +100,50 @@ def check_run_results(request):
             elif status == 3 or status == 4:
                 stdout = data["stdout"]
                 stderr = data["stderr"]
-                status_id = data["status_id"]
-                status_description = data["status_description"]
-                language_id = data["language_id"]
+                status_id = data["status"]["id"]
+                status_description = data["status"]["description"]
                 execution_time = data["time"]
 
-                try:
-                    testcase = TestCase.objects.get(id=item["testcase_id"])
-
-                    results.append({
-                        "stdout": stdout,
-                        "stderr": stderr,
-                        "status_id": status_id,
-                        "status_description": status_description,
-                        "language_id": language_id,
-                        "time": execution_time,
-                        "testcase": testcase,
-                    })
-                    finished_testcases += 1
-                except TestCase.DoesNotExist:
-                    # TODO this needs to return a fragment
-                    messages.error(request, "Unable to Retrieve Testcase")
+                results.append({
+                    "stdin": stdin,
+                    "expected_output": expected_output,
+                    "stdout": stdout,
+                    "stderr": stderr,
+                    "status_id": status_id,
+                    "status_description": status_description,
+                    "language_id": language_id,
+                    "time": execution_time,
+                    
+                })
+                if status == 3:
+                    correct += 1
+                finished_testcases += 1
             else:
                 stderr = data["stderr"]
-                status_description = data["status_description"]
-                return render(request, "problems/output_window.html", {"stderr": stderr, "status_description": status_description})
+                status_description = data["status"]["description"]
+                return render(request, "problems/page/output_window.html", {"stdin": stdin, "expected_output": expected_output, "stderr": stderr, "status_description": status_description, "language_id": language_id})
         
         # TODO make an html fragment for this
         if finished_testcases == len(pending_tokens):
+            del request.session["run_language_id"]
             del request.session["tokens"]
-            return render(request, "problems/output_window.html", {"results": results})
+            if correct == finished_testcases:
+                passed_testcases = f"{correct}/{finished_testcases}"
+                print(f"FINISHED RESULTS: {results}")
+                return render(request, "problems/page/output_window.html", {"results": results, "overall_status": "Accepted", "passed_testcases": passed_testcases})
+            else:
+                passed_testcases = f"{correct}/{finished_testcases}"
+                return render(request, "problems/page/output_window.html", {"results": results, "overall_status": "Wrong Answer", "passed_testcases": passed_testcases})
         else:
             # keep polling
-            return render(request, "running.html")
+            print(f"ELSE RESULTS: {results}")
+            return HttpResponse(status=204)
     else:
-        messages.error(request, "Unable to Retrieve Tokens")
-        return render(request, "problems/problem_run_response.html")
+        # one last poll is made when the evaluation stops, "status=204" stops a blank rendering
+        return HttpResponse(status=204)
     
 # FOR SUBMITTING THE CODE ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# TODO make this @login_required once done testing or once user auth is set up
+@login_required
 def process_submit_code(request):
     if request.method == "POST":
         form = GetCode(request.POST)
@@ -145,6 +163,7 @@ def process_submit_code(request):
                 language = Language.objects.get(judge0_id=language_id)
             except Language.DoesNotExist:
                 messages.error(request, "Unable to locate language")
+            # the language filter ay not actually be necessary. double check
             testcases = TestCase.objects.filter(problem=problem, language=language)
 
             if testcases:
@@ -153,7 +172,7 @@ def process_submit_code(request):
                     stdin = testcase.input_data
                     expected_output = testcase.expected_output
                     
-                    response = requests.post("http://localhost:2358/submissions", json={"source_code": source_code, "language_id": language_id, "stdin": stdin, "expected_output": expected_output})
+                    response = requests.post("http://159.203.137.178:2358/submissions", json={"source_code": source_code, "language_id": language_id, "stdin": stdin, "expected_output": expected_output})
                     data = response.json()
                     token = data["token"]
                     tokens.append(
@@ -192,9 +211,9 @@ def check_submit_results(request):
         for item in pending_tokens:
             token = item["token"]
             # "status_description" should be a valid field, but may not be
-            response = requests.get(f'http://localhost:2358/submissions/{token}?fields=stdout,stderr,status_id,status_description,language_id,time,memory')
+            response = requests.get(f'http://159.203.137.178:2358/submissions/{token}')
             data = response.json()
-            status = data["status_id"]
+            status = data["status"]["id"]
             # still processing
             if status == 1 or status == 2:
                 continue
@@ -202,8 +221,8 @@ def check_submit_results(request):
             elif status == 3 or status == 4:
                 stdout = data["stdout"]
                 stderr = data["stderr"]
-                status_id = data["status_id"]
-                status_description = data["status_description"]
+                status_id = data["status"]["id"]
+                status_description = data["status"]["description"]
                 language_id = data["language_id"]
                 runtime = data["time"]
                 memory = data["memory"]
@@ -231,7 +250,7 @@ def check_submit_results(request):
             else:
                 # runtime error 
                 stderr = data["stderr"]
-                status_description = data["status_description"]
+                status_description = data["status"]["description"]
                 return render(request, "problems/output_window.html", {"stderr": stderr, "status_description": status_description})
             
         # submission completed (all testcases tested)  
@@ -383,11 +402,10 @@ def check_submit_results(request):
 
         else:
             # keep polling
-            return render(request, "running.html")
+            return HttpResponse(status=204)
     
     else:
-        messages.error(request, "Unable to Retrieve Tokens")
-        return render(request, "problems/problem_run_response.html")
+        return HttpResponse(status=204)
 
 
 
@@ -404,7 +422,7 @@ def problem_list_window(request):
     user_status_subquery = UserProblem.objects.filter(problem=OuterRef("pk"), user=user).values("status")[:1]
     all_problems = Problem.objects.annotate(user_status=Subquery(user_status_subquery))
 
-    return render(request, "problems/problem_list.html", {"problems": all_problems, "categories": categories, "quote": quote})
+    return render(request, "problems/list/problem_list.html", {"problems": all_problems, "categories": categories, "quote": quote})
 
 
 
@@ -413,10 +431,18 @@ def load_problem(request, problem_id):
     if request.method == "GET":
         # realistically if this doesnt work the site is cooked
         try:
+            user = request.user
             problem = Problem.objects.get(id=problem_id)
+            # will return code for all languages, template can parse through
+            problem_codes = ProblemCode.objects.filter(problem=problem)
+            user_problem, created = UserProblem.objects.get_or_create(user=user, problem=problem)
+            # TODO ExampleTestcase should fix the testcase issue (allocating certain testcases for certain problems)
+            testcases = ExampleTestcase.objects.filter(problem=problem)
+            examples = Example.objects.filter(problem=problem)
+            hints = Hint.objects.filter(problem=problem)
         except Problem.DoesNotExist:
             messages.error(request, "Unable to locate problem")
-        return render(request, "problems/problem_page.html", {"problem": problem})
+        return render(request, "problems/page/problem_page.html", {"problem": problem, "problem_codes": problem_codes, "user_problem": user_problem, "testcases": testcases, "examples": examples, "hints": hints})
     
         
 @login_required
@@ -426,7 +452,7 @@ def search_for_problem(request):
         if form.is_valid():
             query = form.cleaned_data["query"]
             problems = Problem.objects.filter(title__icontains=query)
-            return render(request, "problems/search_problems_fragment.html", {"problems": problems})
+            return render(request, "problems/list/search_problems_fragment.html", {"problems": problems})
     return HttpResponse("")
 
 @login_required
@@ -438,23 +464,67 @@ def filter_problem_difficulty(request):
             user = request.user
             user_status_subquery = UserProblem.objects.filter(problem=OuterRef("pk"), user=user).values("status")[:1]
             problems = Problem.objects.filter(difficulty=difficulty).annotate(user_status=Subquery(user_status_subquery))
-            return render(request, "problems/search_problems_fragment.html", {"problems": problems})
+            return render(request, "problems/list/search_problems_fragment.html", {"problems": problems})
     return HttpResponse("")
 
 
 
 @login_required
-def problem_question_window(request):
-    # TODO figure out redirect if user presses question twice
-    return
+def problem_problem_window(request):
+    if request.method == "POST":
+        form = PassProblemID(request.POST)
+        if form.is_valid():
+            problem_id = form.cleaned_data["problem_id"]
+            try:
+                user = request.user
+                problem = Problem.objects.get(id=problem_id)
+                user_problem, created = UserProblem.objects.get_or_create(user=user, problem=problem)
+                # TODO ExampleTestcase should fix the testcase issue (allocating certain testcases for certain problems)
+                testcases = ExampleTestcase.objects.filter(problem=problem)
+                examples = Example.objects.filter(problem=problem)
+                hints = Hint.objects.filter(problem=problem)
+            except Problem.DoesNotExist:
+                messages.error(request, "Unable to locate problem")
+            return render(request, "problems/page/problem_window.html", {"problem": problem, "user_problem": user_problem, "testcases": testcases, "examples": examples, "hints": hints})
 
 @login_required
 def problem_solution_window(request):
-    # TODO figure out routing logic. all this does is change the window from the question
-    return
+    if request.method == "POST":
+        form = PassProblemID(request.POST)
+        if form.is_valid():
+            problem_id = form.cleaned_data["problem_id"]
+            try:
+                problem = Problem.objects.get(id=problem_id)
+            except Problem.DoesNotExist:
+                messages.error(request, "Unable to locate problem")
+                
+
+            # links the solution code with the solution. kinda like a subquery but for a whole model
+            solutions = Solution.objects.filter(problem=problem).prefetch_related("codes")
+
+            return render(request, "problems/page/solution_window.html", {"solutions": solutions})
 
 @login_required
 def problem_submissions_window(request):
+    if request.method == "POST":
+        form = PassProblemID(request.POST)
+        if form.is_valid():
+            problem_id = form.cleaned_data["problem_id"]
+            try:
+                problem = Problem.objects.get(id=problem_id)
+            except Problem.DoesNotExist:
+                messages.error(request, "Unable to locate problem")
+            user = request.user
+            submissions = Submission.objects.filter(user=user, problem=problem).order_by("-date_submitted")
+            return render(request, "problems/page/submission_window.html", {"submissions": submissions})
+
+@login_required
+def problem_testcase_window(request):
+    # TODO figure out routing logic. all this does is change the window from the question
+    return 
+
+@login_required
+def problem_output_window(request):
     # TODO figure out routing logic. all this does is change the window from the question
     return
 

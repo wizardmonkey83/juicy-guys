@@ -1,0 +1,7 @@
+<!-- in the future be aware of trying to swap innerHTML when there is an existing element with the same id as the one you want to swap. -->
+<div class="running-animation" hx-get="{% url 'check_run_results' %}" hx-trigger="every 100ms" hx-target="#testcase-wrapper" hx-swap="outerHTML">
+    <span>Running</span>
+    <span class="dot">.</span>
+    <span class="dot">.</span>
+    <span class="dot">.</span>
+</div>

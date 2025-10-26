@@ -26,7 +26,7 @@ a {
 /* text logo for now, might add a logo, not sure */
 .logo {
     font-size: 1.5rem;
-    font-weight: bold;
+    font-weight: 600;
 }
 
 .main-nav ul {
@@ -46,7 +46,7 @@ a {
 .main-nav a:hover {
     color: #ffffff;
 }
-/* --- figure out how to get a line to appear under page user is on --- */
+/*  figure out how to get a line to appear under page user is on  */
 .main-nav.active {
     border-bottom: 2px #ffffff;
 }
@@ -54,14 +54,14 @@ a {
 
 
 
-/* --- main container --- */
+/*  main container  */
 .problem-list-container {
     max-width: 1200px;
     margin: 2rem auto;
     padding: 0 2rem;
 }
 
-/* --- category filter section --- */
+/* category filter section */
 .category-section {
     display: flex;
     flex-wrap: wrap;
@@ -99,7 +99,7 @@ a {
     height: 18px;
 }
 
-/* --- problem List --- */
+/* problem List  */
 .problem-list {
     display: flex;
     flex-direction: column;
@@ -142,7 +142,7 @@ a {
     color: #a7a7a7;
 }
 
-/* --- theres weird alignment stuff going on here. all elements should stay rigid, no matte rthe length of the problem title. --- */
+/* theres weird alignment stuff going on here. all elements should stay rigid, no matte rthe length of the problem title. */
 .problem-percentage,
 .problem-difficulty,
 .problem-status {
@@ -179,7 +179,7 @@ a {
 }
 
 
-/* --- filter Section --- */
+/*  filter Section  */
 .filter-section {
     display: flex;
     align-items: center;
@@ -210,26 +210,9 @@ a {
 }
 
 /* w stack */
-.filter-section form:nth-of-type(2) {
+.problem-tags-container form:nth-of-type(2) {
     display: flex;
     gap: 0.5rem;
-}
-
-.difficulty-tag {
-    background-color: #2D2D2D;
-    border: none;
-    border-radius: 20px;
-    color: #a7a7a7;
-    padding: 0.4rem 0.9rem;
-    font-size: 0.9rem;
-    font-family: inherit;
-    cursor: pointer;
-    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-}
-
-.difficulty-tags:hover {
-    background-color: #3a3a3a;
-    color: #ffffff;
 }
 
 .quote {
@@ -239,19 +222,42 @@ a {
     white-space: nowrap;
 }
 
-/* learn something new every day */
-.difficulty-tag[value="easy"] {
-    color: #00B8A3;
+
+.problem-tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;    
+    margin-bottom: 1.5rem; 
 }
 
-.difficulty-tag[value="medium"] {
+.tag-item {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;     
+    background-color: #3a3a3a; 
+    color: #c9c9c9;           
+    font-size: 0.9rem;
+    line-height: 1.4;
+    font-family: inherit;
+    font-weight: 400;
+
+    border: none;
+    cursor: pointer;
+}
+.tag-item.difficulty-easy { 
+    color: #00B8A3; 
+}
+.tag-item.difficulty-medium { 
     color: #FFC01E; 
 }
-
-.difficulty-tag[value="hard"] {
+.tag-item.difficulty-hard { 
     color: #FF375F;
 }
-
-.difficulty-tag[value="legendary"] {
+.tag-item.difficulty-legendary { 
     color: #9750DD;
+}
+
+.tag-item.category-tag {
+    color: #c9c9c9; 
+    background-color: #3a3a3a;
 }
