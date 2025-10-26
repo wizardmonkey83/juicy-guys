@@ -6,6 +6,8 @@ from django.db.models import Q, Subquery, OuterRef,Prefetch
 import time
 import datetime
 import json
+import textwrap
+import ast
 
 
 from .forms import GetCode, SearchForProblem, FilterProblemDifficulty, PassProblemID
@@ -30,7 +32,6 @@ def process_run_code(request):
             problem_id = form.cleaned_data["problem_id"]
             language_id = form.cleaned_data["language_id"]
             custom_testcases = form.cleaned_data["custom_testcases"]
-            print(f"SOURCE CODE: {source_code}")
 
             try:
                 problem = Problem.objects.get(id=problem_id)
@@ -44,16 +45,46 @@ def process_run_code(request):
             if few_testcases:
                 tokens = []
                 for testcase in few_testcases:
+
+                    # script to prep submission for judge0
+                    scaffolding_imports = "import sys\nimport json\nfrom typing import List, Dict, Set, Tuple, Optional\n"
+                    class_name = problem.class_name
+                    method_name = problem.method_name
+                    parameter_names = problem.parameter_names
                     # usuing .get() instead of dict["key"] so a keyerror isnt raised if value is not present
-                    stdin = testcase.get("input")
+                    stdin_string = testcase.get("input")
                     expected_output = testcase.get("output")
+
+                    try:
+                        # the frontend renders the default stdin using single quotes, invalidating the JSON structure. this is then passed back here and the script tries to parse it but fails. this should fix it
+                        stdin_dict = ast.literal_eval(stdin_string)
+                    except (ValueError, SyntaxError):
+                        # problably already valid JSON
+                        stdin_dict = json.loads(stdin_string)
+                    print(f"STDIN_DICT: {stdin_dict}")
+                    # textwrap solves indentation error
+                    # instance creates the instance of the solution class
+                    driver_script = textwrap.dedent(f"""
+                    try:
+                        data = json.loads(sys.stdin.read())
+                        instance = {class_name}()
+                        method_to_call = getattr(instance, "{method_name}")
+                        result = method_to_call(**data)
+                        print(result)
+                    except Exception as error:
+                        print(f"Execution error: {{error}}", file=sys.stderr)
+                    """)
+                    full_script_string  = scaffolding_imports + "\n" + source_code + "\n" + driver_script
+                                                                                                    # converts dict back into string
+                    payload = {"source_code": full_script_string, "language_id": language_id, "stdin": json.dumps(stdin_dict), "expected_output": expected_output}
+
                     
-                    response = requests.post("http://159.203.137.178:2358/submissions", json={"source_code": source_code, "language_id": language_id, "stdin": stdin, "expected_output": expected_output})
+                    response = requests.post("http://159.203.137.178:2358/submissions", json=payload)
                     data = response.json()
                     token = data["token"]
                     tokens.append(
                         {"token": token,
-                         "stdin": stdin,
+                         "stdin": stdin_string,
                          "expected_output": expected_output}
                     )
                 request.session["tokens"] = tokens
@@ -163,16 +194,46 @@ def process_submit_code(request):
                 language = Language.objects.get(judge0_id=language_id)
             except Language.DoesNotExist:
                 messages.error(request, "Unable to locate language")
+
+            class_name = problem.class_name
+            method_name = problem.method_name
+            parameter_names = problem.parameter_names
+
             # the language filter ay not actually be necessary. double check
             testcases = TestCase.objects.filter(problem=problem, language=language)
 
             if testcases:
                 tokens = []
                 for testcase in testcases:
-                    stdin = testcase.input_data
+                    stdin_string = testcase.input_data
                     expected_output = testcase.expected_output
+
+                    # script to prep submission for judge0
+                    scaffolding_imports = "import sys\nimport json\nfrom typing import List, Dict, Set, Tuple, Optional\n"
+                    class_name = problem.class_name
+                    method_name = problem.method_name
+
+                    try:
+                        # the frontend renders the default stdin using single quotes, invalidating the JSON structure. this is then passed back here and the script tries to parse it but fails. this should fix it
+                        stdin_dict = ast.literal_eval(stdin_string)
+                    except (ValueError, SyntaxError):
+                        # problably already valid JSON
+                        stdin_dict = json.loads(stdin_string)
+
+                    driver_script = textwrap.dedent(f"""
+                    try:
+                        data = json.loads(sys.stdin.read())
+                        instance = {class_name}()
+                        method_to_call = getattr(instance, "{method_name}")
+                        result = method_to_call(**data)
+                        print(result)
+                    except Exception as error:
+                        print(f"Execution error: {{error}}", file=sys.stderr)
+                    """)
+                    full_script_string  = scaffolding_imports + "\n" + source_code + "\n" + driver_script
+                    payload = {"source_code": full_script_string, "language_id": language_id, "stdin": json.dumps(stdin_dict), "expected_output": expected_output}
                     
-                    response = requests.post("http://159.203.137.178:2358/submissions", json={"source_code": source_code, "language_id": language_id, "stdin": stdin, "expected_output": expected_output})
+                    response = requests.post("http://159.203.137.178:2358/submissions", json=payload)
                     data = response.json()
                     token = data["token"]
                     tokens.append(

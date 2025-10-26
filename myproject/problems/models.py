@@ -34,6 +34,9 @@ class Problem(models.Model):
     category = models.ForeignKey(Category, on_delete=models.PROTECT)
     problem_solved_count = models.PositiveIntegerField(default=0)
     submissions_made_count = models.PositiveIntegerField(default=0)
+    method_name = models.TextField()
+    class_name = models.TextField()
+    parameter_names = models.JSONField()
 
     def __str__(self):
         return self.title
@@ -61,7 +64,8 @@ class ProblemCode(models.Model):
         return f"Starting Code for {self.problem.title} - {self.language.name}"
 
 class TestCase(models.Model):
-    input_data = models.TextField()
+    # JSON that maches the parameter_names in Problem model
+    input_data = models.JSONField() 
     expected_output = models.TextField()
     language = models.ManyToManyField(Language)
     problem = models.ForeignKey(Problem, on_delete=models.CASCADE, related_name="testcases")
@@ -71,7 +75,7 @@ class TestCase(models.Model):
 
 # this might not be needed, but fine for now. check back on it
 class ExampleTestcase(models.Model):
-    input_data = models.TextField()
+    input_data = models.JSONField() 
     expected_output = models.TextField()
     problem = models.ForeignKey(Problem, on_delete=models.CASCADE, related_name="example_testcases")
 
