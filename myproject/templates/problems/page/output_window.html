@@ -10,7 +10,7 @@
         </div>
         <div class="testcase-tabs">
         {% for result in results %}
-            <button id="result_{{ forloop.counter }}" type="button" class="testcase-tab {% if forloop.first %}active{% endif %}" data-stdin="{{ result.stdin }}" data-expected-output="{{ result.expected_output }}" data-stdout="{{ result.stdout }}" data-status-description="{{ result.status_description }}">Case {{ forloop.counter }}</button>
+            <button id="result_{{ forloop.counter }}" type="button" class="testcase-tab {% if forloop.first %}active{% endif %}" data-input="{{ result.stdin }}" data-output="{{ result.expected_output }}" data-stdout="{{ result.stdout }}" data-status-description="{{ result.status_description }}">Case {{ forloop.counter }}</button>
         {% endfor %}
         </div>
         <div class="result-content">
@@ -42,8 +42,8 @@
                             resultTabs.forEach(t => t.classList.remove("active"));
 
                             tab.classList.add("active");
-                            const resultInput = tab.getAttribute("data-stdin");
-                            const resultExpectedOutput = tab.getAttribute("data-expected-output");
+                            const resultInput = tab.getAttribute("data-output");
+                            const resultExpectedOutput = tab.getAttribute("data-output");
                             const resultOutput = tab.getAttribute("data-stdout");
                             const resultDescription = tab.getAttribute("data-status-description");
 
@@ -55,8 +55,8 @@
                     });
                 function populateTestcaseOnStart() {
                     const activeTab = testcaseContainer.querySelector(".testcase-tab.active");
-                    const resultInput = activeTab.getAttribute("data-stdin");
-                    const resultExpectedOutput = activeTab.getAttribute("data-expected-output");
+                    const resultInput = activeTab.getAttribute("data-input");
+                    const resultExpectedOutput = activeTab.getAttribute("data-output");
                     const resultOutput = activeTab.getAttribute("data-stdout");
 
                     const resultsInputArea = document.getElementById("results-input-data");
@@ -130,6 +130,6 @@
 </div>
 <!-- restores buttons once result is returned -->
 <div id="action-buttons-wrapper" hx-swap-oob="true">
-    <button class="run-button-requires-code" hx-post="{% url 'process_run_code' %}" hx-target="#action-buttons-wrapper" hx-trigger="click" hx-swap="innerHTML">Run</button>
-    <button class="submit-button-requires-code" hx-post="{% url 'process_submit_code' %}" hx-target="#action-buttons-wrapper" hx-trigger="click" hx-swap="innerHTML">Submit</button>
+    <button type="button" class="run-button-requires-code" hx-post="{% url 'process_run_code' %}" hx-target="#action-buttons-wrapper" hx-trigger="click" hx-swap="innerHTML">Run</button>
+    <button type="button" class="submit-button-requires-code" hx-post="{% url 'process_submit_code' %}" hx-target="#action-buttons-wrapper" hx-trigger="click" hx-swap="innerHTML">Submit</button>
 </div>

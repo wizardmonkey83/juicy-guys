@@ -720,7 +720,7 @@ body {
 .result-header.accepted {
     color: #06b400;
 }
-.result-header.wrong-answer,
+.result-header.wrong.answer,
 .result-header.runtime-error,
 .result-header.time-limit-exceeded,
 .result-header.compilation-error {

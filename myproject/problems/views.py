@@ -59,8 +59,19 @@ def process_run_code(request):
                         # the frontend renders the default stdin using single quotes, invalidating the JSON structure. this is then passed back here and the script tries to parse it but fails. this should fix it
                         stdin_dict = ast.literal_eval(stdin_string)
                     except (ValueError, SyntaxError):
-                        # problably already valid JSON
-                        stdin_dict = json.loads(stdin_string)
+                        try:
+                            # problably already valid JSON
+                            stdin_dict = json.loads(stdin_string)
+                        except json.JSONDecodeError:
+                            # ggeez
+                            pass
+                    # when the "run" button is pressed twice, for some reason its sending the json back with extra backslashes. this might fix it 
+                    if isinstance(stdin_dict, str):
+                        try:
+                            stdin_dict = json.loads(stdin_string)
+                        except json.JSONDecodeError:
+                            stdin_dict = ast.literal_eval(stdin_string)
+
                     print(f"STDIN_DICT: {stdin_dict}")
                     # textwrap solves indentation error
                     # instance creates the instance of the solution class
@@ -75,8 +86,8 @@ def process_run_code(request):
                         print(f"Execution error: {{error}}", file=sys.stderr)
                     """)
                     full_script_string  = scaffolding_imports + "\n" + source_code + "\n" + driver_script
-                                                                                                    # converts dict back into string
-                    payload = {"source_code": full_script_string, "language_id": language_id, "stdin": json.dumps(stdin_dict), "expected_output": expected_output}
+                    valid_stdin_json = json.dumps(stdin_dict)
+                    payload = {"source_code": full_script_string, "language_id": language_id, "stdin": valid_stdin_json, "expected_output": expected_output}
 
                     
                     response = requests.post("http://159.203.137.178:2358/submissions", json=payload)
@@ -84,7 +95,7 @@ def process_run_code(request):
                     token = data["token"]
                     tokens.append(
                         {"token": token,
-                         "stdin": stdin_string,
+                         "stdin": valid_stdin_json,
                          "expected_output": expected_output}
                     )
                 request.session["tokens"] = tokens
@@ -136,7 +147,7 @@ def check_run_results(request):
                 execution_time = data["time"]
 
                 results.append({
-                    "stdin": json.dumps(stdin),
+                    "stdin": stdin,
                     "expected_output": expected_output,
                     "stdout": stdout,
                     "stderr": stderr,

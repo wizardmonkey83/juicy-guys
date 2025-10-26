@@ -159,8 +159,8 @@
                 <div class="console-footer">
                     <button class="console-button" type="button">Console</button>
                     <div id="action-buttons-wrapper" class="action-buttons">
-                        <button class="run-button-requires-code" hx-post="{% url 'process_run_code' %}" hx-target="#action-buttons-wrapper" hx-trigger="click" hx-swap="innerHTML">Run</button>
-                        <button class="submit-button-requires-code" hx-post="{% url 'process_submit_code' %}" hx-target="#action-buttons-wrapper" hx-trigger="click" hx-swap="innerHTML">Submit</button>
+                        <button type="button" class="run-button-requires-code" hx-post="{% url 'process_run_code' %}" hx-target="#action-buttons-wrapper" hx-trigger="click" hx-swap="innerHTML">Run</button>
+                        <button type="button" class="submit-button-requires-code" hx-post="{% url 'process_submit_code' %}" hx-target="#action-buttons-wrapper" hx-trigger="click" hx-swap="innerHTML">Submit</button>
                     </div>
                 </div>
 
@@ -337,7 +337,7 @@
         if (consoleButton && consolePanel) {
             consoleButton.addEventListener('click', function() {
                 consolePanel.classList.toggle('hidden');
-                
+
                 consoleButton.classList.toggle('active');
             });
         }
