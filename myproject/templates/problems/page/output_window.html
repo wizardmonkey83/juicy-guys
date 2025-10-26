@@ -10,7 +10,7 @@
         </div>
         <div class="testcase-tabs">
         {% for result in results %}
-            <button id="result_{{ forloop.counter }}" type="button" class="testcase-tab {% if forloop.first %}active{% endif %}" data-input-display="{{ result.stdin|escapejs }}" data-output-display="{{ result.expected_output|escapejs }}" data-stdout-display="{{ result.stdout|escapejs }}" data-input="{{ result.stdin }}" data-output="{{ result.expected_output }}" data-stdout="{{ result.stdout }}" data-status-description="{{ result.status_description }}">Case {{ forloop.counter }}</button>
+            <button id="result_{{ forloop.counter }}" type="button" class="testcase-tab {% if forloop.first %}active{% endif %}" data-input-display="{{ result.stdin }}" data-output-display="{{ result.expected_output }}" data-stdout-display="{{ result.stdout }}" data-input="{{ result.stdin }}" data-output="{{ result.expected_output }}" data-stdout="{{ result.stdout }}" data-status-description="{{ result.status_description }}">Case {{ forloop.counter }}</button>
         {% endfor %}
         </div>
         <div class="result-content">
@@ -45,7 +45,8 @@
         </script>
         {% endif %}
         <script>
-            const resultsContainer = document.getElementById("testcase-wrapper");
+            function initializeOutputWindow() {
+                const resultsContainer = document.getElementById("testcase-wrapper");
                 const resultTabs = resultsContainer.querySelectorAll('.testcase-tab');
                 // might need to be "var" instead of "const". can only get element by id using document
                 const resultsInputArea = document.getElementById("results-input-data");
@@ -69,17 +70,21 @@
                         });
                     });
                 function populateTestcaseOnStart() {
-                    const activeTab = testcaseContainer.querySelector(".testcase-tab.active");
-                    const resultInput = activeTab.getAttribute("data-input-display");
-                    const resultExpectedOutput = activeTab.getAttribute("data-output-display");
-                    const resultOutput = activeTab.getAttribute("data-stdout-display");
+                    const activeTab = resultsContainer.querySelector(".testcase-tab.active");
+                    if (activeTab) {
+                        const resultInput = activeTab.getAttribute("data-input-display");
+                        const resultExpectedOutput = activeTab.getAttribute("data-output-display");
+                        const resultOutput = activeTab.getAttribute("data-stdout-display");
 
-                    
-                    resultsInputArea.textContent = resultInput;
-                    resultsExpectedOutputArea.textContent = resultExpectedOutput;
-                    resultsStdout.textContent = resultOutput;
+                        resultsInputArea.textContent = resultInput;
+                        resultsExpectedOutputArea.textContent = resultExpectedOutput;
+                        resultsStdout.textContent = resultOutput;
+                    }
                 }
                 populateTestcaseOnStart();
+            }
+            // on the second run, the script would execute before the DOM. it would try to find the resultsContainer but there wouldnt be one, crashing the script. this ensures the script waits until the resultsContainer is loaded. 
+            setTimeout(initializeOutputWindow, 0);
         </script>
     {% else %}
     <div class="result-details">
