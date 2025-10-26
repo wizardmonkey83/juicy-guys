@@ -136,7 +136,7 @@ def check_run_results(request):
                 execution_time = data["time"]
 
                 results.append({
-                    "stdin": stdin,
+                    "stdin": json.dumps(stdin),
                     "expected_output": expected_output,
                     "stdout": stdout,
                     "stderr": stderr,

@@ -6,11 +6,11 @@
     {% if results %}
         <div class="result-details">
             <div id="result-overall-status" class="result-header {{ overall_status|lower }}">{{ overall_status }}</div>
-            <div id="result-passed-testcases" class="passed-testcases">{{ passed_testcases }}</div>
+            <div id="result-passed-testcases" class="passed-testcases">Testcases Passed: {{ passed_testcases }}</div>
         </div>
         <div class="testcase-tabs">
         {% for result in results %}
-            <button id="{{ result }}_{{ forloop.counter }}" type="button" class="testcase-tab {% if forloop.first %}active{% endif %}" data-stdin="{{ result.stdin }}" data-expected-output="{{ result.expected_output }}" data-stdout="{{ result.stdout }}" data-status-description="{{ result.status_description }}">Case {{ forloop.counter }}</button>
+            <button id="result_{{ forloop.counter }}" type="button" class="testcase-tab {% if forloop.first %}active{% endif %}" data-stdin="{{ result.stdin }}" data-expected-output="{{ result.expected_output }}" data-stdout="{{ result.stdout }}" data-status-description="{{ result.status_description }}">Case {{ forloop.counter }}</button>
         {% endfor %}
         </div>
         <div class="result-content">
