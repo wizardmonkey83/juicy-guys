@@ -26,7 +26,6 @@ def signup_view(request):
                 messages.error(request, "Username and/or Email already exists")
 
             user = form.save()
-            # creates profile model alongside the user
             Profile.objects.create(user=user)
             login(request, user)
             return redirect("user_home")
