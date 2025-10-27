@@ -1,0 +1,186 @@
+body {
+    background-color: #1A1A1A;
+    color: #EFEFEF;
+    font-family: "DM Sans", sans-serif; 
+    font-weight: 400;
+    font-style: normal;
+    margin: 0;
+    padding: 0;
+}
+
+a {
+    color: #00B8A3;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+a:hover {
+    color: #00B8A3;
+}
+
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 2rem;
+    background-color: #252525;
+    border-bottom: 1px solid #3a3a3a;
+}
+.logo {
+    font-family: "Jersey 10", sans-serif;
+    font-size: 1.5rem;
+    font-weight: 100;
+}
+.main-nav ul {
+    font-family: "Jersey 10", sans-serif;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 2rem;
+}
+.main-nav a {
+    font-size: 1rem;
+    color: #a7a7a7;
+    text-decoration: none;
+    transition: color 0.2s ease-in-out;
+}
+.main-nav a:hover {
+    color: #efefef;
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 400px;
+    margin: 4rem auto;
+    padding: 2.5rem;
+    background-color: #252525;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.auth-header {
+    font-family: "Jersey 10", sans-serif;
+    font-size: 2.5rem;
+    font-weight: 100;
+    color: #efefef;
+    text-align: center;
+    margin: 0 0 2rem 0;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"] {
+    font-family: "Source Code Pro", monospace;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #c9c9c9;
+    background-color: #1e1e1e;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    padding: 0.75rem;
+    width: 100%;
+    box-sizing: border-box; 
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="email"]:focus,
+.form-group input[type="password"]:focus {
+    border-color: #a7a7a7;
+}
+
+.auth-button {
+    border: none;
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    font-family: "DM Sans", sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    width: 100%;
+    background-color: #00B8A3;
+    color: #1A1A1A;
+    transition: background-color 0.2s ease;
+}
+
+.auth-button:hover {
+    background-color: #00B8A3;
+}
+
+.form-errors {
+    margin-bottom: 1.5rem;
+}
+.error-message {
+    color: #FF375F;
+    font-family: "DM Sans", sans-serif;
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+}
+
+.oauth-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: #a7a7a7;
+    font-family: "DM Sans", sans-serif;
+    font-size: 0.9rem;
+    margin: 2rem 0;
+}
+
+.oauth-divider::before,
+.oauth-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #3a3a3a;
+}
+
+.oauth-divider:not(:empty)::before {
+    margin-right: .5em;
+}
+
+.oauth-divider:not(:empty)::after {
+    margin-left: .5em;
+}
+
+.github-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    padding: 0.65rem 1rem;
+    font-family: "DM Sans", sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    width: 100%;
+    background-color: #333;
+    color: #efefef;
+    transition: background-color 0.2s ease;
+    box-sizing: border-box;
+}
+
+.github-button:hover {
+    background-color: #444;
+}
+
+.github-button .github-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.switch-link {
+    font-family: "DM Sans", sans-serif;
+    font-size: 0.9rem;
+    color: #a7a7a7;
+    text-align: center;
+    margin-top: 1.5rem;
+}

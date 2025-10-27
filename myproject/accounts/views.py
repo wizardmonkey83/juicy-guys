@@ -32,7 +32,7 @@ def signup_view(request):
         
     else:
         form = SignUpForm()
-    return render(request, "registration/signup.html", {"form": form})
+    return render(request, "accounts/signup.html", {"form": form})
 
 def login_view(request):
     if request.method == "POST":
@@ -51,7 +51,7 @@ def login_view(request):
     else:
         form = LoginForm()
     
-    return render(request, "registration/login.html", {"form": form})
+    return render(request, "accounts/login.html", {"form": form})
 
 # CHANGING STUFF -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

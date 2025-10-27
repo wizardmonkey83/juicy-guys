@@ -1,0 +1,74 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <link rel="stylesheet" href="{% static 'css/accounts/auth.css' %}">
+    <script src="https://unpkg.com/htmx.org@1.9.9"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jersey+10&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+    <title>Sign Up</title>
+</head>
+<body>
+    <header class="main-header">
+        <div class="logo">Juicy Guys</div>
+        <nav class="main-nav">
+            <ul>
+                <li><a href=":()">Characters</a></li>
+                <li><a href="{% url 'problem_list_window' %}">Problems</a></li>
+                <li><a href=":()">Profile</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="auth-container">
+            <h1 class="auth-header">Create Account</h1>
+            <form method="post" class="auth-form">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    {{ form.username }}
+                </div>
+                <div class="form-group">
+                    {{ form.email }}
+                </div>
+                <div class="form-group">
+                    {{ form.password1 }}
+                </div>
+                <div class="form-group">
+                    {{ form.password2 }}
+                </div>
+
+                {% if form.errors %}
+                    <div class="form-errors">
+                        {% for field, error_list in form.errors.items %}
+                            {% for error in error_list %}
+                                <p class="error-message">{{ error }}</p>
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <button type="submit" class="auth-button">Sign Up</button>
+            </form>
+
+            <div class="oauth-divider">OR</div>
+
+            <a href="{% url 'social:begin' 'github' %}" class="github-button">
+                <img src="{% static 'icons/github-logo.svg' %}" alt="GitHub icon" class="github-icon">
+                <span>Continue with GitHub</span>
+            </a>
+
+            <p class="switch-link">
+                Already have an account? <a href="{% url 'login_view' %}">Log In</a>
+            </p>
+        </div>
+    </main>
+
+</body>
+</html>

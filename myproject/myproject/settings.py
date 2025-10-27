@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     'social_django',
 
     'accounts.apps.AccountsConfig',
-    'accounts',
+
     'problems',
     'characters',
 ]
