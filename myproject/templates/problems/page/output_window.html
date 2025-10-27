@@ -1,5 +1,5 @@
 <div id="console-tabs-container" class="panel-tabs console-tabs" hx-swap-oob="true">
-    <button hx-post="{% url 'problem_testcase_window' %}" hx-target="#console-window" hx-trigger="click" hx-swap="innerHTML">Test Case</button>
+    <button hx-post="{% url 'problem_testcase_window' %}" hx-target="#console-window" hx-trigger="click" hx-swap="innerHTML" hx-vals='"problem_id": "{{ problem.id }}"'>Test Case</button>
     <button class="active" hx-post="{% url 'problem_output_window' %}" hx-target="#console-window" hx-trigger="click" hx-swap="innerHTML">Output</button>
 </div>
 <div id="testcase-wrapper" data-language-id="{{ language_id }}" class="testcase-wrapper">
@@ -39,6 +39,9 @@
                 const languageId = '{{ language_id }}';
                 let storageKey = `juicyguys_code_draft_${problemId}_${languageId}`;
                 localStorage.removeItem(storageKey);
+                // removes testcases as well
+                let testcaseStorageKey =  `juicyguys_testcases_${problemId}`;
+                localStorage.removeItem(testcaseStorageKey);
             } catch (e) {
                 console.error("Failed to remove draft from localStorage:", e);
             }

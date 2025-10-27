@@ -135,24 +135,7 @@
                     <div id="console-window" class="console-content">
                         <!-- within this will be the testcases (1, 2, and/or 3) as well as the button to toggle between testcases -->
                         <!-- if the user selects output, the testcase toggle buttons will remain, and the input, users output and expected output will be shown. if an error occurs, it will be shown -->
-                        <div id="testcase-wrapper" class="testcase-wrapper">
-                            <div class="testcase-tabs">
-                            {% for testcase in testcases %}
-                                <button id="{{ testcase.id }}" type="button" class="testcase-tab {% if forloop.first %}active{% endif %}" data-input='{{ testcase.input_data }}' data-output='{{ testcase.expected_output }}'>Case {{ forloop.counter }}</button>
-                            {% endfor %}
-                            </div>
-                            <div class="testcase-content">
-                                <div class="testcase-input-group">
-                                    <label for="input-data">Input =</label>
-                                    <textarea id="custom-input-data" name="input-data" class="testcase-input"></textarea>
-                                </div>
-                                <div class="testcase-input-group">
-                                    <label for="expected-output">Expected Output =</label>
-                                    <!-- this is poised to be an issue. you need to find out how to allocate certain display testcases that correlate to the examples shown in the problem description. maybe create a new model -->
-                                    <textarea id="custom-expected-output" name="expected-output" class="testcase-input"></textarea>
-                                </div>
-                            </div>
-                        </div>
+                        {% include "problems/page/testcase_window.html" %}
                     </div>
                 </div>
 
@@ -222,54 +205,6 @@
             let storageKey = `juicyguys_code_draft_${problemId}_${currentJudge0Id}`;
             localStorage.setItem(storageKey, editedCode);
         })
-
-        // testcase tabbing -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        const testcaseContainer = document.getElementById("testcase-wrapper");
-        const testcaseTabs = testcaseContainer.querySelectorAll('.testcase-tab');
-        // might need to be "var" instead of "const". can only get element by id using document
-        const inputArea = document.getElementById("custom-input-data");
-        const outputArea = document.getElementById("custom-expected-output");
-
-        testcaseTabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    testcaseTabs.forEach(t => t.classList.remove('active'));
-
-                    tab.classList.add('active');
-                    const testcaseInput = tab.getAttribute('data-input');
-                    const testcaseOutput = tab.getAttribute('data-output');
-
-                    inputArea.value = testcaseInput;
-                    outputArea.value = testcaseOutput;
-                });
-            });
-
-        function populateTestcaseOnStart() {
-            const activeTab = testcaseContainer.querySelector('.testcase-tab.active');
-            if (activeTab) {
-                const testcaseInput = activeTab.getAttribute('data-input');
-                const testcaseOutput = activeTab.getAttribute('data-output');
-                inputArea.value = testcaseInput;
-                outputArea.value = testcaseOutput;
-            }
-        }
-        populateTestcaseOnStart();
-
-        // save user edited input (if they made edits to testcase) ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        inputArea.addEventListener("input", function() {
-            const activeTab = testcaseContainer.querySelector('.testcase-tab.active');
-            const newText = inputArea.value; 
-            if (activeTab) {
-                activeTab.dataset.input = newText;
-            }
-        });
-
-        outputArea.addEventListener("input", function() {
-            const activeTab = testcaseContainer.querySelector('.testcase-tab.active');
-            const newText = outputArea.value;
-            if (activeTab) {
-                activeTab.dataset.output = newText;
-            }
-        });
 
         // changing languages ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         languageSelector.onchange = function changeLanguage() {

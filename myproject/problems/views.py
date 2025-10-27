@@ -470,8 +470,9 @@ def check_submit_results(request):
                 "problem_id": problem.id,
                 "language_id": language.judge0_id
             }
+            submission_was_successful = True
             # TODO make an html fragment for this
-            return render(request, "problems/output_window.html", context)
+            return render(request, "problems/output_window.html", context, submission_was_successful)
 
         else:
             # keep polling
@@ -592,9 +593,15 @@ def problem_submissions_window(request):
             return render(request, "problems/page/submission_window.html", {"submissions": submissions})
 
 @login_required
-def problem_testcase_window(request):
-    # TODO figure out routing logic. all this does is change the window from the question
-    return 
+def problem_testcase_window(request, problem_id):
+    if request.method == "POST":
+        problem_id = request.POST.get("problem_id")
+        try:
+            problem = Problem.objects.get(id=problem_id)
+        except Problem.DoesNotExist:
+            messages.error(request, "Unable to locate problem")
+        example_testcases = ExampleTestcase.objects.filter(problem=problem)
+        return render(request, "problems/page/testcase_window.html", {"example_testcases": example_testcases})
 
 @login_required
 def problem_output_window(request):
