@@ -1,0 +1,7 @@
+<div id="console-tabs-container" class="panel-tabs console-tabs" hx-swap-oob="true">
+    <button  hx-post="{% url 'problem_testcase_window' problem_id=problem.id %}" hx-target="#console-window" hx-swap="innerHTML">Test Case</button>
+    <button class="active" hx-post="{% url 'problem_output_window' problem_id=problem.id %}" hx-target="#console-window" hx-trigger="click" hx-swap="innerHTML">Output</button>
+</div>
+<div id="testcase-wrapper" class="testcase-wrapper">
+    <p>Run your code to see output</p>
+</div>

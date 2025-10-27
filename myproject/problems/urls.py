@@ -23,6 +23,6 @@ urlpatterns = [
     path("problems/problem-submissions-window/", problem_submissions_window, name="problem_submissions_window"),
 
     # routing for buttons (testcase, output) inside of the console
-    path("problems/problem-testcase-window/", problem_testcase_window, name="problem_testcase_window"),
-    path("problems/problem-output-window/", problem_output_window, name="problem_output_window"),
+    path("problems/problem-testcase-window/<int:problem_id>/", problem_testcase_window, name="problem_testcase_window"),
+    path("problems/problem-output-window/<int:problem_id>/", problem_output_window, name="problem_output_window"),
 ]

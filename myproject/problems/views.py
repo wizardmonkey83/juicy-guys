@@ -54,7 +54,7 @@ def process_run_code(request):
                     # usuing .get() instead of dict["key"] so a keyerror isnt raised if value is not present
                     stdin_string = testcase.get("input")
                     expected_output = testcase.get("output")
-                    print(f"STDIN_STRING: {stdin_string}")
+                    # print(f"STDIN_STRING: {stdin_string}")
 
                     try:
                         # the frontend renders the default stdin using single quotes, invalidating the JSON structure. this is then passed back here and the script tries to parse it but fails. this should fix it
@@ -101,6 +101,8 @@ def process_run_code(request):
                     )
                 request.session["tokens"] = tokens
                 request.session["run_language_id"] = language_id
+                # the url needs a problem object as an argument
+                request.session["problem_id"] = problem_id
                 # TODO pass information to frontend to begin polling check_run_results. should be a button changed from "run" to "running" or an icon change
                 return render(request, "problems/page/running.html")
             else:
@@ -122,6 +124,14 @@ def process_run_code(request):
 def check_run_results(request):
     tokens = request.session.get("tokens")
     language_id = request.session.get("run_language_id")
+    # the url needs a problem object as an argument
+    problem_id = request.session.get("problem_id")
+
+    try:
+        problem = Problem.objects.get(id=problem_id)
+    except Problem.DoesNotExist:
+        messages.error(request, "Unable to locate problem")
+
     if tokens:
         pending_tokens = tokens[:]
         results = []
@@ -134,7 +144,7 @@ def check_run_results(request):
             # "status_description" should be a valid field, but may not be
             response = requests.get(f'http://159.203.137.178:2358/submissions/{token}')
             data = response.json()
-            print(f"JUDGE0 RESPONSE: {data}")
+            # print(f"JUDGE0 RESPONSE: {data}")
             status = data["status"]["id"]
             # still processing
             if status == 1 or status == 2:
@@ -164,22 +174,23 @@ def check_run_results(request):
             else:
                 stderr = data["stderr"]
                 status_description = data["status"]["description"]
-                return render(request, "problems/page/output_window.html", {"stdin": stdin, "expected_output": expected_output, "stderr": stderr, "status_description": status_description, "language_id": language_id})
+                return render(request, "problems/page/output_window.html", {"stdin": stdin, "expected_output": expected_output, "stderr": stderr, "status_description": status_description, "language_id": language_id, "problem": problem})
         
         # TODO make an html fragment for this
         if finished_testcases == len(pending_tokens):
             del request.session["run_language_id"]
             del request.session["tokens"]
+            del request.session["problem_id"]
             if correct == finished_testcases:
                 passed_testcases = f"{correct}/{finished_testcases}"
                 print(f"FINISHED RESULTS: {results}")
-                return render(request, "problems/page/output_window.html", {"results": results, "overall_status": "Accepted", "passed_testcases": passed_testcases})
+                return render(request, "problems/page/output_window.html", {"results": results, "overall_status": "Accepted", "passed_testcases": passed_testcases, "problem": problem})
             else:
                 passed_testcases = f"{correct}/{finished_testcases}"
-                return render(request, "problems/page/output_window.html", {"results": results, "overall_status": "Wrong Answer", "passed_testcases": passed_testcases})
+                return render(request, "problems/page/output_window.html", {"results": results, "overall_status": "Wrong Answer", "passed_testcases": passed_testcases, "problem": problem})
         else:
             # keep polling
-            print(f"ELSE RESULTS: {results}")
+             # print(f"ELSE RESULTS: {results}")
             return HttpResponse(status=204)
     else:
         # one last poll is made when the evaluation stops, "status=204" stops a blank rendering
@@ -467,12 +478,10 @@ def check_submit_results(request):
             context = {
                 "results": results,
                 "submission_was_successful": True,
-                "problem_id": problem.id,
+                "problem": problem,
                 "language_id": language.judge0_id
             }
-            submission_was_successful = True
-            # TODO make an html fragment for this
-            return render(request, "problems/output_window.html", context, submission_was_successful)
+            return render(request, "problems/page/output_window.html", context)
 
         else:
             # keep polling
@@ -595,18 +604,21 @@ def problem_submissions_window(request):
 @login_required
 def problem_testcase_window(request, problem_id):
     if request.method == "POST":
-        problem_id = request.POST.get("problem_id")
         try:
             problem = Problem.objects.get(id=problem_id)
         except Problem.DoesNotExist:
             messages.error(request, "Unable to locate problem")
         example_testcases = ExampleTestcase.objects.filter(problem=problem)
-        return render(request, "problems/page/testcase_window.html", {"example_testcases": example_testcases})
+        return render(request, "problems/page/testcase_window.html", {"testcases": example_testcases, "problem": problem})
 
 @login_required
-def problem_output_window(request):
-    # TODO figure out routing logic. all this does is change the window from the question
-    return
+def problem_output_window(request, problem_id):
+    try:
+        problem = Problem.objects.get(id=problem_id)
+    except Problem.DoesNotExist:
+        messages.error(request, "Unable to locate problem")
+    # TODO if you want you can load a placeholder --> "Run code to see output"
+    return render(request, "problems/page/output_window_placeholder.html", {"problem": problem})
 
             
 

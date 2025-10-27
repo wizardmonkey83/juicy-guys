@@ -1,0 +1,115 @@
+<div id="testcase-wrapper" data-problem-id="{{ problem.id }}" class="testcase-wrapper">
+    <div class="testcase-tabs">
+    {% for testcase in testcases %}
+        <button id="{{ testcase.id }}" type="button" class="testcase-tab {% if forloop.first %}active{% endif %}" data-input='{{ testcase.input_data }}' data-output='{{ testcase.expected_output }}'>Case {{ forloop.counter }}</button>
+    {% endfor %}
+    </div>
+    <div class="testcase-content">
+        <div class="testcase-input-group">
+            <label for="input-data">Input =</label>
+            <textarea id="custom-input-data" name="input-data" class="testcase-input"></textarea>
+        </div>
+        <div class="testcase-input-group">
+            <label for="expected-output">Expected Output =</label>
+            <!-- this is poised to be an issue. you need to find out how to allocate certain display testcases that correlate to the examples shown in the problem description. maybe create a new model -->
+            <textarea id="custom-expected-output" name="expected-output" class="testcase-input"></textarea>
+        </div>
+    </div>
+</div>
+<script>
+    function initializeTestcaseWindow() {
+        // on load ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        const testcaseContainer = document.getElementById("testcase-wrapper");
+        const inputArea = document.getElementById("custom-input-data");
+        const outputArea = document.getElementById("custom-expected-output");
+        const testcaseTabs = testcaseContainer.querySelectorAll('.testcase-tab');
+
+        const testcaseProblemId = testcaseContainer.dataset.problemId;
+        const testcaseStorageKey =  `juicyguys_testcases_${testcaseProblemId}`;
+
+        // saves current state of testcase input/output to the textarea of the active testcase ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        function saveTestcaseToStorage() {
+            const activeTab = testcaseContainer.querySelector('.testcase-tab.active');
+            if (!activeTab) return;
+            // get the case number from the active tab. was going to use regex but this is better
+            const testcaseNumber = activeTab.textContent.replace('Case ', '').trim();
+            const newText = inputArea.value;
+            const newOutput = outputArea.value;
+            // save testcase
+            let editedTestcase = JSON.parse(localStorage.getItem(testcaseStorageKey)) || {};
+            // creates the empty json object thats ready to have data passed into it
+            if (!editedTestcase[testcaseNumber]) {
+                editedTestcase[testcaseNumber] = {};
+            }
+            // passes data
+            editedTestcase[testcaseNumber].input = newText;
+            editedTestcase[testcaseNumber].output = newOutput;
+            // saves
+            localStorage.setItem(testcaseStorageKey, JSON.stringify(editedTestcase));
+        }
+
+        // runs on load and updates the data attributes of the button (data-input, data-output) ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        function loadTestcasesFromStorage() {
+            let editedTestcase = JSON.parse(localStorage.getItem(testcaseStorageKey)) || {};
+            // if its still an empty {}, do nothing since the user hasnt edited any testcases yet
+            if (Object.keys(editedTestcase).length === 0) return;
+
+            testcaseTabs.forEach(tab => {
+                const testcaseNumber = tab.textContent.replace('Case ', '').trim();
+                // safety check to confirm the user has edited the testcase
+                if (editedTestcase[testcaseNumber]) {
+                    // swap out old button attributes with new 
+                    tab.setAttribute('data-input', editedTestcase[testcaseNumber].input);
+                    tab.setAttribute('data-output', editedTestcase[testcaseNumber].output);
+                }
+            });
+        }
+
+
+        // populates generic testcase data ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        function populateTestcaseOnStart() {
+            const activeTab = testcaseContainer.querySelector('.testcase-tab.active');
+            if (activeTab) {
+                const testcaseInput = activeTab.getAttribute('data-input');
+                const testcaseOutput = activeTab.getAttribute('data-output');
+                inputArea.value = testcaseInput;
+                outputArea.value = testcaseOutput;
+            }
+        }
+
+        // testcase tabbing ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        testcaseTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                testcaseTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                // new idea, this just calls the populate function. since the user is on the active tab the data should be passed to it.
+                populateTestcaseOnStart();
+            });
+        });
+
+        // saving changes -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        inputArea.addEventListener("input", function() {
+            const activeTab = testcaseContainer.querySelector('.testcase-tab.active');
+            if (activeTab) {
+                activeTab.dataset.input = inputArea.value; 
+            }
+            // saves testcase to storage, actually revolutionary concepts
+            saveTestcaseToStorage();
+        });
+        // same 
+        outputArea.addEventListener("input", function() {
+            const activeTab = testcaseContainer.querySelector('.testcase-tab.active');
+            if (activeTab) {
+                activeTab.dataset.output = outputArea.value;
+            }
+            saveTestcaseToStorage();
+        });
+
+        // first load data from storage (if there is any)
+        loadTestcasesFromStorage();
+        // then populate testcase areas
+        populateTestcaseOnStart();
+    }
+    // remember to look out for this when the data renders on the first page load, the rendering breaks only after an htmx swap, and the failure is a script crash.
+    setTimeout(initializeTestcaseWindow, 0);
+</script>

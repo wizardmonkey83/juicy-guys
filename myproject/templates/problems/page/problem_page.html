@@ -129,13 +129,13 @@
                 <div class="console active">
                     <div id="console-tabs-container" class="panel-tabs console-tabs">
                         <!-- logic for this needs to be implemented, maybe -->
-                        <button class="active" hx-post="{% url 'problem_testcase_window' %}" hx-target="#console-window" hx-trigger="click" hx-swap="innerHTML">Test Case</button>
-                        <button hx-post="{% url 'problem_output_window' %}" hx-target="#console-window" hx-trigger="click" hx-swap="innerHTML">Output</button>
+                        <button class="active" hx-post="{% url 'problem_testcase_window' problem_id=problem.id %}" hx-target="#console-window" hx-trigger="click" hx-swap="innerHTML">Test Case</button>
+                        <button hx-post="{% url 'problem_output_window' problem_id=problem.id %}" hx-target="#console-window" hx-trigger="click" hx-swap="innerHTML">Output</button>
                     </div>
                     <div id="console-window" class="console-content">
                         <!-- within this will be the testcases (1, 2, and/or 3) as well as the button to toggle between testcases -->
                         <!-- if the user selects output, the testcase toggle buttons will remain, and the input, users output and expected output will be shown. if an error occurs, it will be shown -->
-                        {% include "problems/page/testcase_window.html" %}
+                        {% include "problems/page/testcase_content.html" %}
                     </div>
                 </div>
 
