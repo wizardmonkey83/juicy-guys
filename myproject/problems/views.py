@@ -73,7 +73,7 @@ def process_run_code(request):
                         except json.JSONDecodeError:
                             stdin_dict = ast.literal_eval(stdin_string)
 
-                    print(f"STDIN_DICT: {stdin_dict}")
+                    # print(f"STDIN_DICT: {stdin_dict}")
                     # textwrap solves indentation error
                     # instance creates the instance of the solution class
                     driver_script = textwrap.dedent(f"""
@@ -176,14 +176,13 @@ def check_run_results(request):
                 status_description = data["status"]["description"]
                 return render(request, "problems/page/output_window.html", {"stdin": stdin, "expected_output": expected_output, "stderr": stderr, "status_description": status_description, "language_id": language_id, "problem": problem})
         
-        # TODO make an html fragment for this
         if finished_testcases == len(pending_tokens):
             del request.session["run_language_id"]
             del request.session["tokens"]
             del request.session["problem_id"]
             if correct == finished_testcases:
                 passed_testcases = f"{correct}/{finished_testcases}"
-                print(f"FINISHED RESULTS: {results}")
+                # print(f"FINISHED RESULTS: {results}")
                 return render(request, "problems/page/output_window.html", {"results": results, "overall_status": "Accepted", "passed_testcases": passed_testcases, "problem": problem})
             else:
                 passed_testcases = f"{correct}/{finished_testcases}"
@@ -206,17 +205,19 @@ def process_submit_code(request):
             source_code = form.cleaned_data["code"]
             problem_id = form.cleaned_data["problem_id"]
             language_id = form.cleaned_data["language_id"]
+            print(f"LANGUAGE_ID: {language_id}")
 
             try:
                 problem = Problem.objects.get(id=problem_id)
             except Problem.DoesNotExist:
                 # TODO figure out html fragment to be returned with error messages
                 messages.error(request, "Unable to Locate Problem")
-                return render(request, "problems/problem_run_response.html")
+                return render(request, "problems/page/problem_run_response.html")
             try:
                 language = Language.objects.get(judge0_id=language_id)
             except Language.DoesNotExist:
                 messages.error(request, "Unable to locate language")
+                return render(request, "problems/page/problem_run_response.html")
 
             class_name = problem.class_name
             method_name = problem.method_name
@@ -261,8 +262,7 @@ def process_submit_code(request):
                 request.session["problem_id"] = problem_id
                 request.session["language_id"] = language_id
                 request.session["code"] = source_code
-                # TODO pass information to frontend to begin polling check_run_results. should be a button changed from "submit" to "submiting" or an icon change
-                return render(request, "submitting.html")
+                return render(request, "problems/page/submitting.html")
             else:
                 messages.error(request, "No Testcases Found")
                 return render(request, "problems/problem_run_response.html") 
@@ -300,7 +300,6 @@ def check_submit_results(request):
                 stderr = data["stderr"]
                 status_id = data["status"]["id"]
                 status_description = data["status"]["description"]
-                language_id = data["language_id"]
                 runtime = data["time"]
                 memory = data["memory"]
 
