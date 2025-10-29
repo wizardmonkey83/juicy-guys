@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponse
-from django.db.models import Q, Subquery, OuterRef,Prefetch
+from django.db.models import Q, Subquery, OuterRef, Prefetch
 import time
 import datetime
 import json

@@ -1,0 +1,47 @@
+{% if filtered_characters %}
+    {% for character in filtered_characters %}
+    <div class="card-border level-{{ character.level|lower }}"> 
+        <div class="card-body" style="background-image: url('/static/images/cards/{{ character.technical_name }}/{{ character.technical_name }}-background-frame.png');">
+
+            <div class="card-art-frame">
+                <img class="card-art" src="/static/images/cards/{{ character.technical_name }}/{{ character.technical_name }}-art-frame.png" alt="{{ character.display_name }}">
+            </div>
+
+            <div class="card-name-plate">
+                {{ character.display_name }}
+            </div>
+
+            <div class="card-level-plate">
+                Level 10{{ character.level }}
+            </div>
+
+            <div class="card-type-plate">
+                {{ character.category }} </div>
+
+            <div class="card-description-box" style="background-image: url('/static/images/cards/{{ character.technical_name }}/{{ character.technical_name }}-text-box.png');">
+                <div class="card-ability-section">
+                    <div class="card-text-label-wrapper">
+                        <span class="card-text-label label-ability">Ability</span>
+                    </div>
+                    <p class="card-description-text">
+                        {{ character.ability }}
+                    </p>
+                </div>
+
+                <hr class="card-text-separator">
+
+                <div class="card-lore-section">
+                    <div class="card-text-label-wrapper">
+                        <span class="card-text-label label-lore">Lore</span>
+                    </div>
+                    <p class="card-lore-text">
+                        {{ character.lore }}
+                    </p>
+                </div>
+            </div>   
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <p class="no-results">No Characters Found.</p>
+{% endif %}

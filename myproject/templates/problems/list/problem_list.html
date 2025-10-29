@@ -19,7 +19,7 @@
         <div class="logo">Juicy Guys</div>
         <nav class="main-nav">
             <ul>
-                <li><a href=":()">Characters</a></li>
+                <li><a href="{% url 'character_list_window' %}">Characters</a></li>
                 <li><a href="{% url 'problem_list_window' %}">Problems</a></li>
                 <li><a href=":()">Profile</a></li>
             </ul>
@@ -30,18 +30,32 @@
 
         <!-- this is an expandable "header" where the use can select a certain topic (system design, DSA, etc). -->
         <!-- it will begin collapsed, showing one row of topics. if the user presses an "expand" arrow, the rest of the topics will expand downwards. -->
-        <div class="category-section">
-            <div class="category-tag">
-                    <img src="{% static 'icons/all_categories.svg' %}" alt="All Categories Icon" class="category-icon">
-                    All Categories
-                </div>
-            {% for category in categories %}
-                <!-- the image and title will be positioned side by side in "category-container" -->
-                <div class="category-tag">
-                    <img src="{% static 'icons/'|add:category.icon_filename %}" alt="{{ category.name }} Icon" class="category-icon">
-                    {{ category.name }}
-                </div>
-            {% endfor %}
+        <div id="category-section" class="category-section">
+            <ul class="topics-list">
+                <li>
+                    <div class="category-tag">
+                        <img src="{% static 'icons/bucket.svg' %}" alt="All Categories Icon" class="category-icon">
+                        All Categories
+                    </div>
+                </li>
+                {% for category in categories|slice:":5" %}
+                <li>
+                    <div id="category-tag" class="category-tag">
+                        <img src="{% static 'icons/'|add:category.icon_filename %}" alt="{{ category.name }} Icon" class="category-icon">
+                        {{ category.name }}
+                    </div>
+                </li>
+                {% endfor %}
+                <li><button id="expand-button" type="button" class="expand-categories">Expand</button></li>
+                {% for category in categories|slice:"5:" %}
+                <li class="hidden">
+                    <div class="category-tag">
+                        <img src="{% static 'icons/'|add:category.icon_filename %}" alt="{{ category.name }} Icon" class="category-icon">
+                        {{ category.name }}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
         </div>
 
         <div class="problem-tags-container">
@@ -86,4 +100,19 @@
         </div>
 
     </main>
+    <script>
+        const categoryContainer = document.getElementById("category-section");
+        const expandButton = document.querySelector(".expand-categories");
+        expandButton.addEventListener("click", function() {
+            // toggling adds or removes classes
+            categoryContainer.classList.toggle("is-expanded");
+
+            if (categoryContainer.classList.contains("is-expanded")) {
+                expandButton.innerHTML = "Collapse";
+            } else {
+                expandButton.innerHTML = "Expand";
+            }
+        });
+    </script>
 </body>
+</html>

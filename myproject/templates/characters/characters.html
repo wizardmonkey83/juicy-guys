@@ -1,0 +1,137 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <link rel="stylesheet" href="{% static 'css/characters/character_list.css' %}">
+    <link rel="stylesheet" href="{% static 'css/characters/cards.css' %}">
+    <script src="https://unpkg.com/htmx.org@1.9.9"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jersey+10&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+    <title>Characters</title>
+</head>
+<body>
+    <header class="main-header">
+        <div class="logo">Juicy Guys</div>
+        <nav class="main-nav">
+            <ul>
+                <li><a href="{% url 'character_list_window' %}">Characters</a></li>
+                <li><a href="{% url 'problem_list_window' %}">Problems</a></li>
+                <li><a href=":()">Profile</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="problem-list-container">
+
+        <div id="category-section" class="category-section">
+            <ul class="topics-list">
+                <li>
+                    <div class="category-tag">
+                        <img src="{% static 'icons/bucket.svg' %}" alt="All Categories Icon" class="category-icon">
+                        All Categories
+                    </div>
+                </li>
+                {% for category in categories|slice:":5" %}
+                <li>
+                    <div id="category-tag" class="category-tag">
+                        <img src="{% static 'icons/'|add:category.icon_filename %}" alt="{{ category.name }} Icon" class="category-icon">
+                        {{ category.name }}
+                    </div>
+                </li>
+                {% endfor %}
+                <li><button id="expand-button" type="button" class="expand-categories">Expand</button></li>
+                {% for category in categories|slice:"5:" %}
+                <li class="hidden">
+                    <div class="category-tag">
+                        <img src="{% static 'icons/'|add:category.icon_filename %}" alt="{{ category.name }} Icon" class="category-icon">
+                        {{ category.name }}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="search-level-section">
+            <form>
+               <input type="search" name="query" class="search-questions" placeholder="Search characters..."  hx-post="{% url 'search_for_character' %}" hx-trigger="keyup changed delay:500ms, search" hx-target="#character-grid" hx-swap="innerHTML">
+                {% csrf_token %}
+            </form>
+            <form>
+                <button class="level-tag bronze" type="submit" hx-post="{% url 'filter_character_level' %}" value="bronze" name="level" hx-target="#character-grid" hx-swap="innerHTML">Bronze</button>
+                <button class="level-tag silver" type="submit" hx-post="{% url 'filter_character_level' %}" value="silver" name="level" hx-target="#character-grid" hx-swap="innerHTML">Silver</button>
+                <button class="level-tag gold" type="submit" hx-post="{% url 'filter_character_level' %}" value="gold" name="level" hx-target="#character-grid" hx-swap="innerHTML">Gold</button>
+                {% csrf_token %}
+            </form>
+        </div>
+
+        <div id="character-grid" class="character-grid">
+            {% for character in all_characters %}
+            <div class="character-card {% if character.user_level == 'blank' %}not-achieved{% endif %}">
+                <div class="card-border level-{{ character.user_level|lower|default:'none' }}"> 
+                    <div class="card-body" style="background-image: url('/static/images/cards/{{ character.technical_name }}/{{ character.technical_name }}-background-frame.png');">
+
+                        <div class="card-art-frame">
+                            <img class="card-art" src="{% get_static_prefix %}images/cards/{{ character.technical_name }}/{{ character.technical_name }}-art-frame.png" alt="{{ character.display_name }}">
+                        </div>
+
+                        <div class="card-name-plate">
+                            {{ character.display_name }}
+                        </div>
+
+                        <div class="card-level-plate">
+                            Level 10{{ character.problems_solved_count }}
+                        </div>
+
+                        <div class="card-type-plate">
+                            {{ character.category }} </div>
+
+                        <div class="card-description-box" style="background-image: url('/static/images/cards/{{ character.technical_name }}/{{ character.technical_name }}-text-box.png');">
+                            <div class="card-ability-section">
+                                <div class="card-text-label-wrapper">
+                                    <span class="card-text-label label-ability">Ability</span>
+                                </div>
+                                <p class="card-description-text">
+                                    {{ character.ability }}
+                                </p>
+                            </div>
+
+                            <hr class="card-text-separator">
+
+                            <div class="card-lore-section">
+                                <div class="card-text-label-wrapper">
+                                    <span class="card-text-label label-lore">Lore</span>
+                                </div>
+                                <p class="card-lore-text">
+                                    {{ character.lore }}
+                                </p>
+                            </div>
+                        </div>   
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+    </main>
+    <script>
+        const categoryContainer = document.getElementById("category-section");
+        const expandButton = document.querySelector(".expand-categories");
+        expandButton.addEventListener("click", function() {
+            // toggling adds or removes classes
+            categoryContainer.classList.toggle("is-expanded");
+
+            if (categoryContainer.classList.contains("is-expanded")) {
+                expandButton.innerHTML = "Collapse";
+            } else {
+                expandButton.innerHTML = "Expand";
+            }
+        });
+    </script>
+</body>
+</html>
