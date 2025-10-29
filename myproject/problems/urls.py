@@ -1,11 +1,13 @@
 from django.urls import path
-from .views import process_run_code, check_run_results, check_submit_results, process_submit_code, problem_problem_window, problem_solution_window, problem_submissions_window, load_problem, problem_list_window, search_for_problem, filter_problem_difficulty, problem_output_window, problem_testcase_window
+from .views import process_run_code, filter_problem_categories, check_run_results, check_submit_results, process_submit_code, problem_problem_window, problem_solution_window, problem_submissions_window, load_problem, problem_list_window, search_for_problem, filter_problem_difficulty, problem_output_window, problem_testcase_window
 
 urlpatterns = [
     # problem list page
     path("problems/", problem_list_window, name="problem_list_window"),
     path("problems/search/", search_for_problem, name="search_for_problem"),
     path("problems/filter-difficulty/", filter_problem_difficulty, name="filter_problem_difficulty"),
+    path("problems/filter-category/", filter_problem_categories, name="filter_problem_categories"),
+
     # loads specific problem page
     path("problems/<int:problem_id>/", load_problem, name="load_problem"),
 

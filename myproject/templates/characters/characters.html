@@ -30,39 +30,43 @@
     <main class="problem-list-container">
 
         <div id="category-section" class="category-section">
-            <ul class="topics-list">
-                <li>
-                    <div class="category-tag">
-                        <img src="{% static 'icons/bucket.svg' %}" alt="All Categories Icon" class="category-icon">
-                        All Categories
-                    </div>
-                </li>
-                {% for category in categories|slice:":5" %}
-                <li>
-                    <div id="category-tag" class="category-tag">
-                        <img src="{% static 'icons/'|add:category.icon_filename %}" alt="{{ category.name }} Icon" class="category-icon">
-                        {{ category.name }}
-                    </div>
-                </li>
-                {% endfor %}
-                <li><button id="expand-button" type="button" class="expand-categories">Expand</button></li>
-                {% for category in categories|slice:"5:" %}
-                <li class="hidden">
-                    <div class="category-tag">
-                        <img src="{% static 'icons/'|add:category.icon_filename %}" alt="{{ category.name }} Icon" class="category-icon">
-                        {{ category.name }}
-                    </div>
-                </li>
-                {% endfor %}
-            </ul>
+            <form>
+                <ul class="topics-list">
+                    <li>
+                        <button class="category-tag" hx-post="{% url 'filter_character_categories' %}" hx-target="#character-grid" hx-swap="innerHTML" value="all" name="category_id" type="button">
+                            <img src="{% static 'icons/bucket.svg' %}" alt="All Categories Icon" class="category-icon">
+                            All Categories
+                        </button>
+                    </li>
+                    {% for category in categories|slice:":5" %}
+                    <li>
+                        <button class="category-tag" hx-post="{% url 'filter_character_categories' %}" hx-target="#character-grid" hx-swap="innerHTML" value="{{ category.id }}" name="category_id" type="button">
+                            <img src="{% static 'icons/'|add:category.icon_filename %}" alt="{{ category.name }} Icon" class="category-icon">
+                            {{ category.name }}
+                        </button>
+                    </li>
+                    {% endfor %}
+                    <li><button id="expand-button" type="button" class="expand-categories">Expand</button></li>
+                    {% for category in categories|slice:"5:" %}
+                    <li class="hidden">
+                        <button class="category-tag" hx-post="{% url 'filter_character_categories' %}" hx-target="#character-grid" hx-swap="innerHTML" value="{{ category.id }}" name="category_id" type="button">
+                            <img src="{% static 'icons/'|add:category.icon_filename %}" alt="{{ category.name }} Icon" class="category-icon">
+                            {{ category.name }}
+                        </button>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% csrf_token %}
+            </form>
         </div>
 
-        <div class="search-level-section">
+        <div class="problem-tags-container">
             <form>
                <input type="search" name="query" class="search-questions" placeholder="Search characters..."  hx-post="{% url 'search_for_character' %}" hx-trigger="keyup changed delay:500ms, search" hx-target="#character-grid" hx-swap="innerHTML">
                 {% csrf_token %}
             </form>
             <form>
+                <button class="level-tag" type="submit" hx-post="{% url 'filter_character_level' %}" value="all" name="level" hx-target="#character-grid" hx-swap="innerHTML">All</button>
                 <button class="level-tag bronze" type="submit" hx-post="{% url 'filter_character_level' %}" value="bronze" name="level" hx-target="#character-grid" hx-swap="innerHTML">Bronze</button>
                 <button class="level-tag silver" type="submit" hx-post="{% url 'filter_character_level' %}" value="silver" name="level" hx-target="#character-grid" hx-swap="innerHTML">Silver</button>
                 <button class="level-tag gold" type="submit" hx-post="{% url 'filter_character_level' %}" value="gold" name="level" hx-target="#character-grid" hx-swap="innerHTML">Gold</button>
@@ -73,45 +77,43 @@
         <div id="character-grid" class="character-grid">
             {% for character in all_characters %}
             <div class="character-card {% if character.user_level == 'blank' %}not-achieved{% endif %}">
-                <div class="card-border level-{{ character.user_level|lower|default:'none' }}"> 
-                    <div class="card-body" style="background-image: url('/static/images/cards/{{ character.technical_name }}/{{ character.technical_name }}-background-frame.png');">
+                <div class="card-outer-border level-{{ character.user_level|lower|default:'none' }}"> 
+                    <div class="card-border">
+                        <div class="card-body" style="background-image: url('/static/images/cards/{{ character.technical_name }}/{{ character.technical_name }}-background-frame.png');">
 
-                        <div class="card-art-frame">
-                            <img class="card-art" src="{% get_static_prefix %}images/cards/{{ character.technical_name }}/{{ character.technical_name }}-art-frame.png" alt="{{ character.display_name }}">
-                        </div>
-
-                        <div class="card-name-plate">
-                            {{ character.display_name }}
-                        </div>
-
-                        <div class="card-level-plate">
-                            Level 10{{ character.problems_solved_count }}
-                        </div>
-
-                        <div class="card-type-plate">
-                            {{ character.category }} </div>
-
-                        <div class="card-description-box" style="background-image: url('/static/images/cards/{{ character.technical_name }}/{{ character.technical_name }}-text-box.png');">
-                            <div class="card-ability-section">
-                                <div class="card-text-label-wrapper">
-                                    <span class="card-text-label label-ability">Ability</span>
-                                </div>
-                                <p class="card-description-text">
-                                    {{ character.ability }}
-                                </p>
+                            <div class="card-art-frame">
+                                <img class="card-art" src="{% get_static_prefix %}images/cards/{{ character.technical_name }}/{{ character.technical_name }}-art-frame.png" alt="{{ character.display_name }}">
                             </div>
 
-                            <hr class="card-text-separator">
-
-                            <div class="card-lore-section">
-                                <div class="card-text-label-wrapper">
-                                    <span class="card-text-label label-lore">Lore</span>
-                                </div>
-                                <p class="card-lore-text">
-                                    {{ character.lore }}
-                                </p>
+                            <div class="card-name-plate">
+                                {{ character.display_name }}
                             </div>
-                        </div>   
+
+                            <div class="card-level-plate">
+                                Level {{ character.problems_solved_count|default:'0' }}
+                            </div>
+
+                            <div class="card-type-plate">
+                                {{ character.category }} 
+                            </div>
+
+                            <div class="card-description-box" style="background-image: url('/static/images/cards/{{ character.technical_name }}/{{ character.technical_name }}-text-box.png');">
+                                <div class="card-ability-section">   
+                                    <div class="card-ability-header">
+                                        <div class="card-text-label-wrapper">
+                                            <span class="card-text-label label-ability">Ability</span>
+                                        </div>
+                                        <span class="card-ability-name">
+                                            {{ character.ability }}
+                                        </span>
+                                    </div>
+
+                                    <p class="card-description-text">
+                                        {{ character.ability_description }}
+                                    </p>
+                                </div>
+                            </div>   
+                        </div>
                     </div>
                 </div>
             </div>

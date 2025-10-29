@@ -5,3 +5,6 @@ class PassCharacterLevel(forms.Form):
 
 class SearchForCharacter(forms.Form):
     query = forms.CharField(max_length=100)
+
+class FilterCategories(forms.Form):
+    category_id = forms.CharField()

@@ -10,7 +10,7 @@ import textwrap
 import ast
 
 
-from .forms import GetCode, SearchForProblem, FilterProblemDifficulty, PassProblemID
+from .forms import GetCode, SearchForProblem, FilterProblemDifficulty, PassProblemID, FilterCategories
 from .models import TestCase, Problem, UserProblem, Language, Category, Quote, Example, Hint, Solution, SolutionCode, ExampleTestcase, ProblemCode
 
 from characters.models import Character, UserCharacter
@@ -544,9 +544,14 @@ def filter_problem_difficulty(request):
         if form.is_valid():
             difficulty = form.cleaned_data["difficulty"]
             user = request.user
-            user_status_subquery = UserProblem.objects.filter(problem=OuterRef("pk"), user=user).values("status")[:1]
-            problems = Problem.objects.filter(difficulty=difficulty).annotate(user_status=Subquery(user_status_subquery))
-            return render(request, "problems/list/search_problems_fragment.html", {"problems": problems})
+            if difficulty == "all":
+                user_status_subquery = UserProblem.objects.filter(problem=OuterRef("pk"), user=user).values("status")[:1]
+                problems = Problem.objects.annotate(user_status=Subquery(user_status_subquery))
+                return render(request, "problems/list/search_problems_fragment.html", {"problems": problems})
+            else:
+                user_status_subquery = UserProblem.objects.filter(problem=OuterRef("pk"), user=user).values("status")[:1]
+                problems = Problem.objects.filter(difficulty=difficulty).annotate(user_status=Subquery(user_status_subquery))
+                return render(request, "problems/list/search_problems_fragment.html", {"problems": problems})
     return HttpResponse("")
 
 
@@ -616,8 +621,29 @@ def problem_output_window(request, problem_id):
         problem = Problem.objects.get(id=problem_id)
     except Problem.DoesNotExist:
         messages.error(request, "Unable to locate problem")
-    # TODO if you want you can load a placeholder --> "Run code to see output"
     return render(request, "problems/page/output_window_placeholder.html", {"problem": problem})
+
+
+@login_required
+def filter_problem_categories(request):
+    if request.method == "POST":
+        form = FilterCategories(request.POST)
+        if form.is_valid():
+            category_id = form.cleaned_data["category_id"]
+            user = request.user
+            if category_id == "all":
+                user_status_subquery = UserProblem.objects.filter(problem=OuterRef("pk"), user=user).values("status")[:1]
+                problems = Problem.objects.annotate(user_status=Subquery(user_status_subquery))
+                return render(request, "problems/list/filter_problem_categories.html", {"problems": problems})
+            else:
+                try:
+                    category = Category.objects.get(id=category_id)
+                except Category.DoesNotExist:
+                    pass
+                user_status_subquery = UserProblem.objects.filter(problem=OuterRef("pk"), user=user).values("status")[:1]
+                problems = Problem.objects.filter(category=category).annotate(user_status=Subquery(user_status_subquery))
+                return render(request, "problems/list/filter_problem_categories.html", {"problems": problems})
+
 
             
 

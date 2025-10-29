@@ -1,0 +1,18 @@
+{% for problem in problems %}
+    <!-- user clicks this to take them to the problem. not sure if the "submit" functionality is correct. -->
+    <a href="{% url 'load_problem' problem_id=problem.id %}" class="problem-rectangle {% cycle 'odd' 'even' %}">
+        <div class="problem-title">{{ problem.title }}</div>
+        
+        <div class="problem-details">
+            <!-- big gap between title and rest of elements. title is positioned to the left. everything below is to the right. -->
+            <div class="problem-percentage">{{ problem.acceptance_rate }}%</div>
+            <div class="problem-difficulty {{ problem.difficulty|lower }}">{{ problem.get_difficulty_display }}</div>
+            <div class="problem-category">{{ problem.category }}</div>
+            {% if problem.user_status == "solved" %}
+                <div class="problem-status solved">Solved</div>
+            {% elif problem.user_status == "attempted" %}
+                <div class="problem-status attempted">Attempted</div>
+            {% endif %}
+        </div>
+    </a>
+{% endfor %}

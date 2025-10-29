@@ -31,31 +31,34 @@
         <!-- this is an expandable "header" where the use can select a certain topic (system design, DSA, etc). -->
         <!-- it will begin collapsed, showing one row of topics. if the user presses an "expand" arrow, the rest of the topics will expand downwards. -->
         <div id="category-section" class="category-section">
-            <ul class="topics-list">
-                <li>
-                    <div class="category-tag">
-                        <img src="{% static 'icons/bucket.svg' %}" alt="All Categories Icon" class="category-icon">
-                        All Categories
-                    </div>
-                </li>
-                {% for category in categories|slice:":5" %}
-                <li>
-                    <div id="category-tag" class="category-tag">
-                        <img src="{% static 'icons/'|add:category.icon_filename %}" alt="{{ category.name }} Icon" class="category-icon">
-                        {{ category.name }}
-                    </div>
-                </li>
-                {% endfor %}
-                <li><button id="expand-button" type="button" class="expand-categories">Expand</button></li>
-                {% for category in categories|slice:"5:" %}
-                <li class="hidden">
-                    <div class="category-tag">
-                        <img src="{% static 'icons/'|add:category.icon_filename %}" alt="{{ category.name }} Icon" class="category-icon">
-                        {{ category.name }}
-                    </div>
-                </li>
-                {% endfor %}
-            </ul>
+            <form>
+                <ul class="topics-list">
+                    <li>
+                        <button class="category-tag" hx-post="{% url 'filter_problem_categories' %}" hx-target="#problem-list" hx-swap="innerHTML" value="all" name="category_id" type="button">
+                            <img src="{% static 'icons/bucket.svg' %}" alt="All Categories Icon" class="category-icon">
+                            All Categories
+                        </button>
+                    </li>
+                    {% for category in categories|slice:":5" %}
+                    <li>
+                        <button class="category-tag" hx-post="{% url 'filter_problem_categories' %}" hx-target="#problem-list" hx-swap="innerHTML" value="{{ category.id }}" name="category_id" type="button">
+                            <img src="{% static 'icons/'|add:category.icon_filename %}" alt="{{ category.name }} Icon" class="category-icon">
+                            {{ category.name }}
+                        </button>
+                    </li>
+                    {% endfor %}
+                    <li><button id="expand-button" type="button" class="expand-categories">Expand</button></li>
+                    {% for category in categories|slice:"5:" %}
+                    <li class="hidden">
+                        <button class="category-tag" hx-post="{% url 'filter_problem_categories' %}" hx-target="#problem-list" hx-swap="innerHTML" value="{{ category.id }}" name="category_id" type="button">
+                            <img src="{% static 'icons/'|add:category.icon_filename %}" alt="{{ category.name }} Icon" class="category-icon">
+                            {{ category.name }}
+                        </button>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% csrf_token %}
+            </form>
         </div>
 
         <div class="problem-tags-container">
@@ -65,6 +68,7 @@
             {% csrf_token %}
             </form>
             <form>
+                <button class="tag-item" type="submit" hx-post="{% url 'filter_problem_difficulty' %}" value="all" name="difficulty" hx-target="#problem-list" hx-swap="innerHTML">All</button>
                 <button class="tag-item difficulty-easy" type="submit" hx-post="{% url 'filter_problem_difficulty' %}" value="easy" name="difficulty" hx-target="#problem-list" hx-swap="innerHTML">Easy</button>
                 <button class="tag-item difficulty-medium" type="submit" hx-post="{% url 'filter_problem_difficulty' %}" value="medium" name="difficulty" hx-target="#problem-list" hx-swap="innerHTML">Medium</button>
                 <button class="tag-item difficulty-hard" type="submit" hx-post="{% url 'filter_problem_difficulty' %}" value="hard" name="difficulty" hx-target="#problem-list" hx-swap="innerHTML">Hard</button>

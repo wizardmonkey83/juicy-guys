@@ -14,3 +14,6 @@ class FilterProblemDifficulty(forms.Form):
 
 class PassProblemID(forms.Form):
     problem_id = forms.IntegerField()
+
+class FilterCategories(forms.Form):
+    category_id = forms.CharField()
