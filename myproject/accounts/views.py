@@ -186,4 +186,5 @@ def save_edit_profile(request):
 
 
 
-
+def load_about(request):
+    return render(request, "about.html")

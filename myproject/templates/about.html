@@ -1,0 +1,55 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <link rel="stylesheet" href="{% static 'css/about.css' %}">
+    <script src="https://unpkg.com/htmx.org@1.9.9"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jersey+10&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+    <title>About</title>
+</head>
+<body>
+    <header class="main-header">
+        <div class="logo">Juicy Guys</div>
+        <nav class="main-nav">
+            <ul>
+                <li><a href="{% url 'load_about' %}">About</a></li>
+                {% if user.is_authenticated %}
+                <li><a href="{% url 'character_list_window' %}">Characters</a></li>
+                <li><a href="{% url 'problem_list_window' %}">Problems</a></li>
+                <li><a href="{% url 'profile_window' %}">Profile</a></li>
+                {% else %}
+                <li><a href="{% url 'signup_view' %}">Sign Up</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="about-frame">
+            <div class="about-description">
+                <h1 class="profile-username">About Juicy Guys</h1>
+                <p class="line">I came accross the idea for Juicy Guys on a bike ride in late September.</p>
+                <p class="line">The route I was on took me past the house of a highschool friend.</p>
+
+            </div>
+            <div>
+                <div class="photo-container">
+                    <img src="path to a photo of me" alt="Photo of me" width="set" height="set"/>
+                    <p class="line">caption about photo</p>
+                </div>
+
+                <div class="social-links">
+                    <a href="https://www.linkedin.com/in/benjamin-brady-5212382a6/" target="blank" class="link">LinkedIn</a>
+                    <a href="https://github.com/wizardmonkey83" target="blank" class="link">GitHub</a>
+                    <a href="https://www.youtube.com/@bromleyp" target="blank" class="link">YouTube</a>
+                </div>
+            </div>
+        </section>
+    </main>
