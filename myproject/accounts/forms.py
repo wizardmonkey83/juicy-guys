@@ -30,3 +30,11 @@ class ChangeUsernameForm(forms.Form):
 
 class UploadProfilePictureForm(forms.Form):
     picture = forms.ImageField()
+
+class EditProfileForm(forms.Form):
+    profile_picture = forms.ImageField(required=False)
+    username = forms.CharField(max_length=100, required=False)
+    email = forms.EmailField(max_length=100, required=False)
+    old_password = forms.CharField(required=False)
+    password1 = forms.CharField(required=False)
+    password2 = forms.CharField(required=False)

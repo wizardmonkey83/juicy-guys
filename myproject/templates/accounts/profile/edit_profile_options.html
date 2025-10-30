@@ -1,0 +1,46 @@
+<div id="profile-badge-section" class="card-container">
+    <h2 class="section-header">Edit Profile</h2>
+    <form enctype="multipart/form-data" hx-encoding="multipart/form-data" hx-post="{% url 'save_edit_profile' %}" hx-target="#profile-badge-section" hx-swap="outerHTML" class="edit-profile-form">
+        <div class="form-avatar-section">
+            <img src="{{ user.profile.profile_picture.url }}" alt="Profile Picture" class="form-avatar-img">
+            <div class="form-avatar-upload">
+                <p>Upload a new picture</p>
+                <label for="profile_picture_input" class="form-upload-button">Choose File...</label>
+                <input id="profile_picture_input" name="profile_picture" type="file" accept="image/*"/>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="username_input">Username</label>
+            <input id="username_input" name="username" value="{{ user.username }}" type="text"/>
+        </div>
+        <div class="form-group">
+            <label for="email_input">Email</label>
+            <input id="email_input" name="email" value="{{ user.email }}" type="email"/>
+        </div>
+
+        <div class="form-group-divider">
+            <h3>Change Password</h3>
+            <p>Leave all password fields blank to keep your current password.</p>
+        </div>
+
+        <div class="form-group">
+            <label for="old_password_input">Old Password</label>
+            <input id="old_password_input" placeholder="Enter your old password" name="old_password" type="password"/>
+        </div>
+        
+        <div class="form-group">
+            <label for="password1_input">New Password</label>
+            <input id="password1_input" placeholder="Enter a new password" name="password1" type="password"/>
+        </div>
+
+        <div class="form-group">
+            <label for="password2_input">Confirm New Password</label>
+            <input id="password2_input" placeholder="Confirm your new password" name="password2" type="password"/>
+        </div>
+        <div class="form-button-group">
+            <button type="submit" class="form-button-save">Save Changes</button>
+            <button type="button" class="form-button-cancel" hx-get="{% url 'load_badges_fragment' %}" hx-target="#profile-badge-section" hx-swap="outerHTML">Cancel</button>
+        </div>
+    {% csrf_token %}
+    </form>
+</div>

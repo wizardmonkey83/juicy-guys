@@ -14,7 +14,6 @@
     <title>Problems</title>
 </head>
 <body>
-    <!-- logic for this needs to be implemented. hrefs are placeholders. -->
     <header class="main-header">
         <div class="logo">Juicy Guys</div>
         <nav class="main-nav">
@@ -83,20 +82,21 @@
 
         <div id="problem-list" class="problem-list">
             {% for problem in problems %}
-                <!-- user clicks this to take them to the problem. not sure if the "submit" functionality is correct. -->
                 <a href="{% url 'load_problem' problem_id=problem.id %}" class="problem-rectangle {% cycle 'odd' 'even' %}">
-                    <div class="problem-title">{{ problem.title }}</div>
                     
-                    <div class="problem-details">
-                        <!-- big gap between title and rest of elements. title is positioned to the left. everything below is to the right. -->
-                        <div class="problem-percentage">{{ problem.acceptance_rate }}%</div>
-                        <div class="problem-difficulty {{ problem.difficulty|lower }}">{{ problem.get_difficulty_display }}</div>
-                        <div class="problem-category">{{ problem.category }}</div>
+                    <div class="problem-main-info">
+                        <div class="problem-title">{{ problem.title }}</div>
                         {% if problem.user_status == "solved" %}
                             <div class="problem-status solved">Solved</div>
                         {% elif problem.user_status == "attempted" %}
                             <div class="problem-status attempted">Attempted</div>
                         {% endif %}
+                    </div>
+                    
+                    <div class="problem-meta-info">
+                        <div class="problem-category" title="Category">{{ problem.category }}</div>
+                        <div class="problem-percentage" title="Acceptance">{{ problem.acceptance_rate }}%</div>
+                        <div class="problem-difficulty {{ problem.difficulty|lower }}" title="Difficulty">{{ problem.get_difficulty_display }}</div>
                     </div>
                 </a>
             {% endfor %}

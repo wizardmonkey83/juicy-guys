@@ -23,13 +23,15 @@ a {
     background-color: #252525;
     border-bottom: 1px solid #3a3a3a;
 }
-/* text logo for now, might add a logo, not sure */
+
 .logo {
+    font-family: "Jersey 10", sans-serif;
     font-size: 1.5rem;
-    font-weight: 600;
+    font-weight: 100;
 }
 
 .main-nav ul {
+    font-family: "Jersey 10", sans-serif;
     list-style-type: none;
     margin: 0;
     padding: 0;
@@ -40,11 +42,12 @@ a {
 .main-nav a {
     font-size: 1rem;
     color: #a7a7a7;
+    text-decoration: none;
     transition: color 0.2s ease-in-out;
 }
 
 .main-nav a:hover {
-    color: #ffffff;
+    color: #efefef;
 }
 /*  figure out how to get a line to appear under page user is on  */
 .main-nav.active {
@@ -134,23 +137,35 @@ a {
 .problem-title {
     font-size: 1rem;
     color: #EFEFEF;
-    flex-grow: 1;
     margin-right: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.problem-details {
+.problem-main-info {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+    min-width: 0;
+    margin-right: 2rem;
+}
+
+.problem-meta-info {
     display: flex;
     align-items: center;
     gap: 2.5rem; 
     color: #a7a7a7;
+    flex-shrink: 0; 
 }
 
-/* theres weird alignment stuff going on here. all elements should stay rigid, no matte rthe length of the problem title. */
 .problem-percentage,
 .problem-difficulty,
-.problem-status {
-    width: 80px;
+.problem-status,
+.problem-category { 
+    width: 130px;  
     text-align: left;
+    flex-shrink: 0; 
 }
 
 .problem-difficulty.easy {
@@ -280,7 +295,6 @@ a {
     list-style: none;       
     padding: 0;             
     margin: 0;              
-
 }
 
 .expand-categories-li {

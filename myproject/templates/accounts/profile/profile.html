@@ -1,0 +1,160 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <link rel="stylesheet" href="{% static 'css/accounts/profile.css' %}">
+    <script src="https://unpkg.com/htmx.org@1.9.9"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jersey+10&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+    <title>Profile</title>
+</head>
+<body>
+    <header class="main-header">
+        <div class="logo">Juicy Guys</div>
+        <nav class="main-nav">
+            <ul>
+                <li><a href="{% url 'character_list_window' %}">Characters</a></li>
+                <li><a href="{% url 'problem_list_window' %}">Problems</a></li>
+                <li><a href="{% url 'profile_window' %}">Profile</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main class="profile-container">
+
+        <div class="profile-sidebar">
+            
+            <div class="profile-highlights card-container">
+
+                <div class="profile-info-header">
+                    <div class="profile-avatar">
+                        <span><img src="{{ user.profile.profile_picture.url }}" alt="Profile Picture"></span> 
+                    </div>
+                    <div class="profile-info-text">
+                        <h1 class="profile-username">{{ user.username }}</h1>
+                        <p class="profile-email">{{ user.email }}</p>
+                        <p class="profile-email">Joined: {{ user.date_joined.date }}</p>
+                    </div>
+                </div>
+                
+                <button type="submit" hx-get="{% url 'edit_profile_options' %}" hx-target="#profile-badge-section" hx-swap="outerHTML" class="profile-edit-button">Edit Profile</button>
+            </div>
+
+            <div class="card-container">
+                <h2 class="section-header">Problems Solved: {{ user.profile.problems_solved_count|default:"0" }}</h2>
+                <div class="problem-difficulty-grid">
+
+                    <div class="difficulty-box">
+                        <div class="difficulty-label easy">Easy</div>
+                        <div class="difficulty-count">{{ solved_easy|default:"0" }}/{{ total_easy|default:"0" }}</div>
+                    </div>
+
+                    <div class="difficulty-box">
+                        <div class="difficulty-label medium">Medium</div>
+                        <div class="difficulty-count">{{ solved_medium|default:"0" }}/{{ total_medium|default:"0" }}</div>
+                    </div>
+
+                    <div class="difficulty-box">
+                        <div class="difficulty-label hard">Hard</div>
+                        <div class="difficulty-count">{{ solved_hard|default:"0" }}/{{ total_hard|default:"0" }}</div>
+                    </div>
+
+                    <div class="difficulty-box">
+                        <div class="difficulty-label legendary">Legendary</div>
+                        <div class="difficulty-count">{{ solved_legendary|default:"0" }}/{{ total_legendary|default:"0" }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-container">
+                <h2 class="section-header">Activity</h2>
+                <div class="problem-difficulty-grid">
+                    <div class="difficulty-box">
+                        <div class="difficulty-label">Aura</div>
+                        <div class="difficulty-streak">{{ user.profile.current_streak }}</div>
+                    </div>
+                    <div class="difficulty-box">
+                        <div class="difficulty-label">Max Aura</div>
+                        <div class="difficulty-count">{{ user.profile.max_streak }}</div>
+                    </div>
+                    <div class="difficulty-box">
+                        <div class="difficulty-label">Active Days</div>
+                        <div class="difficulty-count">{{ total_active_days }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-container">
+
+                <h2 class="section-header">Languages</h2>
+                <div class="profile-tags-container">
+
+                    {% for language in languages %}
+                        <span class="tag-item">{{ language }}</span>
+                    {% empty %}
+                        <p class="profile-join">No problems solved.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+
+            <div class="card-container">
+                <h2 class="section-header">Categories</h2>
+                <div class="profile-tags-container">
+                    {% for category in categories %}
+                        <span class="tag-item">{{ category }}</span>
+                    {% empty %}
+                        <p class="profile-join">No problems solved.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div id="delete-logout" class="card-container">
+                <h2 class="section-header">Danger Zone</h2>
+                <form action="{% url 'logout_view' %}">
+                    <div class="profile-tags-container">
+                        <button type="submit" class="profile-edit-button-danger">Logout</button>
+                    </div>
+                {% csrf_token %}
+                </form>
+                <div class="profile-tags-container">
+                    <button type="submit" hx-get="{% url 'delete_account_warning' %}" hx-target="#delete-logout" hx-swap="outerHTML" class="profile-edit-button-danger">Delete Account</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-main-content">
+            {% include "accounts/profile/badges_fragment.html" %}
+
+            <div class="profile-recent-submission-section card-container">
+                <div class="recent-submission-header">
+                    <h2 class="section-header">Recent Submissions</h2>
+                </div>
+                
+                <!-- reuse problem rectangle -->
+                <div id="problem-list" class="problem-list">
+                {% for submission in recent_submissions %}
+                    <a href="{% url 'load_problem' problem_id=submission.problem.id %}" class="problem-rectangle {% cycle 'even' 'odd' %}">
+                        <div class="problem-title">{{ submission.problem.title }}</div>
+                        
+                        <div class="problem-details">
+                            {% if submission.status|lower == "accepted" %}
+                                <div class="problem-status solved">Solved</div>
+                            {% elif submission.status|lower == "wrong answer" %}
+                                <div class="problem-status attempted">Attempted</div>
+                            {% endif %}
+                            <div class="problem-category">{{ submission.date_submitted }}</div>
+                        </div>
+                    </a>
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

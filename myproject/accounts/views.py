@@ -9,10 +9,10 @@ from django.db.models import Q
 from datetime import datetime, timedelta
 
 from django.contrib.auth.models import User
-from .models import Profile, Submission
-from .forms import SignUpForm, LoginForm, ChangeUsernameForm, UploadProfilePictureForm
+from .models import Profile, Submission, Badge
+from .forms import SignUpForm, LoginForm, ChangeUsernameForm, UploadProfilePictureForm, EditProfileForm
 
-from problems.models import UserProblem
+from problems.models import UserProblem, Problem
 
 # Create your views here.
 
@@ -65,27 +65,6 @@ def login_view(request):
 # CHANGING STUFF -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 @login_required
-def change_username(request):
-    if request.method == "POST":
-        form = ChangeUsernameForm(request.POST)
-        if form.is_valid():
-            username = form.cleaned_data["username"]
-            user = request.user
-
-            username_exists = User.objects.filter(username=username).exists()
-            if username_exists:
-                # TODO implement logic for this
-                messages.error(request, "Username Exists")
-            else:
-                user.username = username
-                user.save()
-                # TODO implement logic for this
-                messages.success(request, "Username Changed")
-        else:
-            # TODO implement logic for this
-            messages.error(request, "Invalid Form")
-
-@login_required
 def upload_profile_picture(request):
     if request.method == "POST":
         form = UploadProfilePictureForm(request.POST)
@@ -101,14 +80,18 @@ def upload_profile_picture(request):
 @login_required
 def logout_view(request):
     logout(request)
-    return redirect("login")
+    return redirect("login_view")
 
 # TODO remember to have a confirmation page built into this ("Are you sure you want to delete your account")
+@login_required
+def delete_account_warning(request):
+    return render(request, "accounts/profile/delete_account_warning.html")
+
 @login_required
 def delete_account(request):
     user = request.user
     user.delete()
-    return redirect("signup")
+    return redirect("signup_view")
 
 # LOADING PAGES ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 @login_required
@@ -120,7 +103,86 @@ def profile_window(request):
     total_active_days = Submission.objects.filter(user=user).values("date_submitted__date").distinct().count()
     # slice can be changed for aesthetics
     recent_submissions = Submission.objects.filter(user=user).order_by("-date_submitted")[:10]
-    return render(request, "accounts/profile.html", {"languages": languages_solved, "categories_solved": categories_solved, "total_active_days": total_active_days, "recent_submissions": recent_submissions})
+
+    badges = Badge.objects.all()
+
+    solved_easy = Submission.objects.filter(user=user, problem__difficulty="easy", status="Accepted").count()
+    solved_medium = Submission.objects.filter(user=user, problem__difficulty="medium", status="Accepted").count()
+    solved_hard = Submission.objects.filter(user=user, problem__difficulty="hard", status="Accepted").count()
+    solved_legendary = Submission.objects.filter(user=user, problem__difficulty="legendary", status="Accepted").count()
+
+    total_solved = {
+        "solved_easy": solved_easy,
+        "solved_medium": solved_medium,
+        "solved_hard": solved_hard,
+        "solved_legendary": solved_legendary
+    }
+
+    total_easy_problems = Problem.objects.filter(difficulty="easy").count()
+    total_medium_problems = Problem.objects.filter(difficulty="medium").count()
+    total_hard_problems = Problem.objects.filter(difficulty="hard").count()
+    total_legendary_problems = Problem.objects.filter(difficulty="legendary").count()
+
+    total_problems = {
+        "total_easy": total_easy_problems,
+        "total_medium": total_medium_problems,
+        "total_hard": total_hard_problems,
+        "total_legendary": total_legendary_problems
+    }
+
+    context = {
+        "languages": languages_solved, 
+        "categories": categories_solved, 
+        "total_active_days": total_active_days, 
+        "recent_submissions": recent_submissions,
+        "total_problems": total_problems,
+        "total_solved": total_solved,
+        "badges": badges
+    }
+
+    return render(request, "accounts/profile/profile.html", context)
+
+@login_required
+def edit_profile_options(request):
+    return render(request, "accounts/profile/edit_profile_options.html")
+
+@login_required
+def load_badges_fragment(request):
+    badges = Badge.objects.all()
+    return render(request, "accounts/profile/badges_fragment.html", {"badges": badges})
+
+@login_required
+def save_edit_profile(request):
+    if request.method == "POST":
+        form = EditProfileForm(request.POST)
+        if form.is_valid():
+            user = request.user
+            profile_picture = request.FILES.get("profile_picture")
+            username = form.cleaned_data["username"]
+            email = form.cleaned_data["email"]
+            old_password = form.cleaned_data["old_password"]
+            password1 = form.cleaned_data["password1"]
+            password2 = form.cleaned_data["password2"]
+
+            if profile_picture:
+                user.profile.profile_picture = profile_picture
+            if username:
+                username_exists = User.objects.filter(username=username).exists()
+                if not username_exists and username != user.username:
+                    user.username = username
+                    user.save()
+            if email:
+                if user.email != email:
+                    user.email = email
+                    user.save()
+            if old_password:
+                if user.check_password(old_password):
+                    if password1 and password2 and password1 == password2:
+                        user.set_password(password1)
+                        user.save()
+            login(request, user)
+            badges = Badge.objects.all()
+            return render(request, "accounts/profile/badges_fragment.html", {"badges": badges})
 
 
 

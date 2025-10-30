@@ -1,0 +1,13 @@
+<div id="profile-badge-section" class="profile-badge-section card-container">
+    <h2 class="section-header">Badges</h2>
+    <div class="badge-grid">
+        
+        {% for badge in badges %}
+        <div class="badge-item unlocked" title="{{ badge.title }}: {{ badge.short_description }}">
+            <div class="badge-icon">
+                <img src="{{ badge.image_path }}" alt="{{ badge.title }}">
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
