@@ -6,11 +6,13 @@ from django.dispatch import receiver
 
 from django.contrib import messages
 from django.db.models import Q
+from datetime import datetime, timedelta
 
 from django.contrib.auth.models import User
-from .models import Profile
+from .models import Profile, Submission
 from .forms import SignUpForm, LoginForm, ChangeUsernameForm, UploadProfilePictureForm
 
+from problems.models import UserProblem
 
 # Create your views here.
 
@@ -107,4 +109,19 @@ def delete_account(request):
     user = request.user
     user.delete()
     return redirect("signup")
+
+# LOADING PAGES ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+@login_required
+def profile_window(request):
+    user = request.user
+    # flat=True returns list of one item tuples. "ozuna" instead of ("ozuna",). can only be used hwen querying for one field
+    languages_solved = Submission.objects.filter(user=user, status="Accepted").values_list("language__name", flat=True).distinct()
+    categories_solved = UserProblem.objects.filter(user=user, status="solved").values_list("problem__category__name", flat=True).distinct()
+    total_active_days = Submission.objects.filter(user=user).values("date_submitted__date").distinct().count()
+    # slice can be changed for aesthetics
+    recent_submissions = Submission.objects.filter(user=user).order_by("-date_submitted")[:10]
+    return render(request, "accounts/profile.html", {"languages": languages_solved, "categories_solved": categories_solved, "total_active_days": total_active_days, "recent_submissions": recent_submissions})
+
+
+
 

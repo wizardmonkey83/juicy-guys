@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.http import HttpResponse
 from django.db.models import Q, Subquery, OuterRef, Prefetch
 import time
-import datetime
+from datetime import datetime, timedelta
 import json
 import textwrap
 import ast
@@ -423,6 +423,23 @@ def check_submit_results(request):
                     runtime=avg_runtime,
                     memory=avg_memory,
                 )
+
+            # updating streak
+            today = datetime.now().date()
+            yesterday = today - timedelta(days=1)
+            if user.profile.last_submission_date == today:
+                pass
+            else:
+                if user.profile.last_submission_date == yesterday:
+                    user.profile.current_streak += 1
+                else:
+                    user.profile.current_streak = 1
+                if user.profile.current_streak > user.profile.max_streak:
+                    user.profile.max_streak = user.profile.current_streak
+                user.profile.last_submission_date = today
+                user.profile.save()
+
+
             # GOAT badge (messi)
             if user.profile.acceptance_rate >= .95:
                 # this will return an error until i create the badge
