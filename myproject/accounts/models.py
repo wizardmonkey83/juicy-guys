@@ -16,7 +16,7 @@ class Badge(models.Model):
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    badges = models.ManyToManyField(Badge)
+    badges = models.ManyToManyField(Badge, blank=True)
     
     profile_picture = models.ImageField(default="avatar.jpg", upload_to="profile_pictures")
     problems_solved_count = models.PositiveIntegerField(default=0)

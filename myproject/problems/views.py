@@ -332,7 +332,7 @@ def check_submit_results(request):
 
                 try:
                     testcase = TestCase.objects.get(id=item["testcase_id"])
-                    
+
                     results.append({
                         "stdout": stdout,
                         "stderr": stderr,
@@ -353,21 +353,43 @@ def check_submit_results(request):
                 stderr = data["stderr"]
                 status_description = data["status"]["description"]
 
+                try:
+                    problem = Problem.objects.get(id=problem_id)
+                except Problem.DoesNotExist:
+                    # shouldve just been doing this al along
+                    problem = None 
+
+                try:
+                    testcase = TestCase.objects.get(id=item["testcase_id"])
+                    stdin_data = testcase.input_data
+                    expected_output_data = testcase.expected_output
+                except TestCase.DoesNotExist:
+                    pass
+                
+                context = {
+                    "stderr": stderr, 
+                    "status_description": status_description,
+                    "problem": problem,
+                    "language_id": language_id,
+                    "stdin": stdin_data,
+                    "expected_output": expected_output_data
+                }
+
                 del request.session["tokens"]
                 del request.session["submission_results"]
                 del request.session["problem_id"]
                 del request.session["language_id"]
                 del request.session["code"]
 
-                return render(request, "problems/page/output_window.html", {"stderr": stderr, "status_description": status_description})
+                return render(request, "problems/page/output_window.html", context)
             # so that finished testcases arent looped over
         request.session["tokens"] = pending_tokens
             
         # submission completed (all testcases tested)  
         if len(pending_tokens) == 0:
-            # print(f"PROBLEM ID: {problem_id}")
             try:
                 problem = Problem.objects.get(id=problem_id)
+                print(f"PROBLEM ID: {problem_id}")
             except Problem.DoesNotExist:
                 # TODO make this functional
                 messages.error(request, "Unable to locate problem")

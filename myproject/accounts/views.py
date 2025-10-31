@@ -113,10 +113,10 @@ def profile_window(request):
 
     badges = Badge.objects.all()
 
-    solved_easy = Submission.objects.filter(user=user, problem__difficulty="easy", status="Accepted").count()
-    solved_medium = Submission.objects.filter(user=user, problem__difficulty="medium", status="Accepted").count()
-    solved_hard = Submission.objects.filter(user=user, problem__difficulty="hard", status="Accepted").count()
-    solved_legendary = Submission.objects.filter(user=user, problem__difficulty="legendary", status="Accepted").count()
+    solved_easy = UserProblem.objects.filter(user=user, problem__difficulty="easy", status="solved").count()
+    solved_medium = UserProblem.objects.filter(user=user, problem__difficulty="medium", status="solved").count()
+    solved_hard = UserProblem.objects.filter(user=user, problem__difficulty="hard", status="solved").count()
+    solved_legendary = UserProblem.objects.filter(user=user, problem__difficulty="legendary", status="solved").count()
 
     total_solved = {
         "solved_easy": solved_easy,

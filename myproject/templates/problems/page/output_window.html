@@ -91,11 +91,11 @@
             setTimeout(initializeOutputWindow, 0);
         </script>
     {% else %}
-    <div class="result-details">
-        <div id="stderr-message" class="result-header-red">{{ stderr }}</div>
-    </div>
     <div class="result-error-description">
         <div class="error-description">{{ status_description }}</div>
+    </div>
+    <div class="result-details">
+        <div id="stderr-message" class="result-header-red">{{ stderr }}</div>
     </div>
     <div class="result-content">
             <div class="result-input-group">
@@ -110,43 +110,51 @@
         </div>
     <!-- javascript to highlight the line within the editor where the error occured -->
     <script>
-        try {
-            const editor = ace.edit("editor");
-            const errorMessage = document.getElementById("stderr-message").textContent;
-        
-            const wrapper = document.getElementById("testcase-wrapper");
-            const languageId = wrapper.dataset.languageId; 
+        // theres an issue with the removeAllMarkers task that prevents the line from being highlighted
+        // damn timeouts 
+        function highlightErrorLine() {
+            try {
+                const editor = ace.edit("editor");
+                const errorMessage = document.getElementById("stderr-message").textContent;
+            
+                const wrapper = document.getElementById("testcase-wrapper");
+                const languageId = wrapper.dataset.languageId; 
 
-            let regex;
-            switch (languageId) {
-                case '71': // python
-                    regex = /line (\d+)/;
-                    break;
-                case '62': // java
-                    regex = /java:(\d+)\)/;
-                    break;
-                default:
-                    regex = null;
-            }
-            if (regex) {
-                const match = errorMessage.match(regex);
-                if (match && match[1]) {
-                    const lineNumber = parseInt(match[1], 10);
+                let regex;
+                switch (languageId) {
+                    case '71': // python
+                        regex = /line (\d+)/;
+                        break;
+                    case '62': // java
+                        regex = /java:(\d+)\)/;
+                        break;
+                    default:
+                        regex = null;
+                }
+                if (regex) {
+                    const match = errorMessage.match(regex);
+                    if (match && match[1]) {
+                        const reportedLineNumber = parseInt(match[1], 10);
+                        // since the script adds lines
+                        const codeOffset = 4;
+                        const lineNumber = reportedLineNumber - codeOffset;
 
-                    if (!isNaN(lineNumber) && lineNumber > 0) {
-                        const Range = ace.require("ace/range").Range;
-                        editor.session.removeAllMarkers();
-                    
-                        editor.session.addMarker(
-                            new Range(lineNumber - 1, 0, lineNumber - 1, 1000), "ace-error-line", "fullLine");
-                        editor.gotoLine(lineNumber);
+                        if (!isNaN(lineNumber) && lineNumber > 0) {
+                            const Range = ace.require("ace/range").Range;
+                            editor.session.removeAllMarkers();
+                        
+                            editor.session.addMarker(
+                                new Range(lineNumber - 1, 0, lineNumber - 1, 1000), "ace-error-line", "fullLine");
+                            editor.gotoLine(lineNumber);
+                        }
                     }
                 }
+            } catch (e) {
+                console.error("Error highlighting line:", e);
+                // silent fail so ui doenst break
             }
-        } catch (e) {
-            console.error("Error highlighting line:", e);
-            // silent fail so ui doenst break
         }
+        setTimeout(highlightErrorLine, 0);
     </script>
     {% endif %}
 </div>
