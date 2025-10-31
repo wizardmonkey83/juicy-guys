@@ -362,7 +362,7 @@ def check_submit_results(request):
                     messages.error(request, "Unable to locate character")
                 
                 user_character, created = UserCharacter.objects.get_or_create(user=user, character=character)
-                user_character.problems_solved_count += 1
+                user_character.problems_solved_count += 1  
 
                 if user_character.problems_solved_count == 5:
                     user_character.level = "bronze"

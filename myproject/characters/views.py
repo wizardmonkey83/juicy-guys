@@ -43,7 +43,7 @@ def filter_character_level(request):
                 characters = Character.objects.annotate(problems_solved_count=Subquery(user_characters.values("problems_solved_count")[:1]), user_level=Subquery(user_characters.values("level")[:1]))
                 return render(request, "characters/filter_characters_fragment.html", {"characters": characters})
             else:
-                user_characters = UserCharacter.objects.filter(level=level)
+                user_characters = UserCharacter.objects.filter(user=user, level=level)
                 return render(request, "characters/filter_characters_fragment.html", {"user_characters": user_characters})
                                                                                                                 
 @login_required

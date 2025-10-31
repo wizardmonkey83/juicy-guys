@@ -1,2 +1,306 @@
-<p>yoooooooo</p>
-<a href="{% url 'problem_list_window' %}" class="nav-link">Problems</a>
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <link rel="stylesheet" href="{% static 'css/index.css' %}">
+    <link rel="stylesheet" href="{% static 'css/characters/cards.css' %}">
+    <link rel="stylesheet" href="{% static 'css/characters/character_list.css' %}">
+    <script src="https://unpkg.com/htmx.org@1.9.9"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jersey+10&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+    <title>Juicy Guys</title>
+</head>
+<body>
+    <header class="main-header">
+        <div class="logo"><a href="{% url 'index' %}">Juicy Guys</a></div>
+        <nav class="main-nav">
+            <ul>
+                <li><a href="{% url 'load_about' %}">About</a></li>
+                {% if user.is_authenticated %}
+                <li><a href="{% url 'character_list_window' %}">Characters</a></li>
+                <li><a href="{% url 'problem_list_window' %}">Problems</a></li>
+                <li><a href="{% url 'profile_window' %}">Profile</a></li>
+                {% else %}
+                <li><a href="{% url 'signup_view' %}">Sign Up</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+    
+    <main>
+        
+        <div class="text-window-display">
+            <div class="text-window-content">
+                <h1 class="display-title">A Better Way to Learn</h1>
+                <p class="display-subtitle">Level up your skills, and fun, today.</p>
+                <div class="display-cta">
+                    <a href="{% url 'signup_view' %}" class="primary-button">Start Practicing</a>
+                    <a href="{% url 'login_view' %}" class="display-button">Jump Back In</a>
+                </div>
+            </div>
+
+            <div class="display-right-column">
+                <div class="display-graphic">
+                    <img src="{% static 'images/two-sum-problem-page.png' %}" alt="Problem Page">
+                </div>
+
+                <div class="stat-block-container">
+                    <div class="stat-item">
+                        <span class="stat-number">225+</span>
+                        <span class="stat-label">Problems</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <span class="stat-number">15+</span>
+                        <span class="stat-label">Categories</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <span class="stat-number">4</span>
+                        <span class="stat-label">Difficulty Ranks</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title-wrapper">
+            <h2 class="section-title">Meet The Juicy Guys</h2>
+            <p class="section-subtitle">Solve problems to unlock and level up your collection.</p>
+        </div>
+
+        <div class="track-viewport">
+            <div class="card-track-right">
+                {% for character in all_characters %}
+                    <div class="character-card {% if character.user_level == 'blank' %}not-achieved{% endif %}">
+                        <div class="card-outer-border level-{{ character.user_level|lower|default:'none' }}"> 
+                            <div class="card-border">
+                                <div class="card-body" style="background-image: url('/static/images/cards/{{ character.technical_name }}/{{ character.technical_name }}-background-frame.png');">
+                                    <div class="card-art-frame">
+                                        <img class="card-art" src="{% get_static_prefix %}images/cards/{{ character.technical_name }}/{{ character.technical_name }}-art-frame.png" alt="{{ character.display_name }}">
+                                    </div>
+                                    <div class="card-name-plate">
+                                        {{ character.display_name }}
+                                    </div>
+                                    <div class="card-level-plate">
+                                        Level {{ numbers|random }}
+                                    </div>
+                                    <div class="card-type-plate">
+                                        {{ character.category }} 
+                                    </div>
+                                    <div class="card-description-box" style="background-image: url('/static/images/cards/{{ character.technical_name }}/{{ character.technical_name }}-text-box.png');">
+                                        <div class="card-ability-section">   
+                                            <div class="card-ability-header">
+                                                <div class="card-text-label-wrapper">
+                                                    <span class="card-text-label label-ability">Ability</span>
+                                                </div>
+                                                <span class="card-ability-name">
+                                                    {{ character.ability }}
+                                                </span>
+                                            </div>
+                                            <p class="card-description-text">
+                                                {{ character.ability_description }}
+                                            </p>
+                                        </div>
+                                    </div>   
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                <!-- why do they keep jumping......... -->
+                {% for character in all_characters %}
+                    <div class="character-card {% if character.user_level == 'blank' %}not-achieved{% endif %}">
+                        <div class="card-outer-border level-{{ character.user_level|lower|default:'none' }}"> 
+                            <div class="card-border">
+                                <div class="card-body" style="background-image: url('/static/images/cards/{{ character.technical_name }}/{{ character.technical_name }}-background-frame.png');">
+                                    <div class="card-art-frame">
+                                        <img class="card-art" src="{% get_static_prefix %}images/cards/{{ character.technical_name }}/{{ character.technical_name }}-art-frame.png" alt="{{ character.display_name }}">
+                                    </div>
+                                    <div class="card-name-plate">
+                                        {{ character.display_name }}
+                                    </div>
+                                    <div class="card-level-plate">
+                                        Level {{ numbers|random }}
+                                    </div>
+                                    <div class="card-type-plate">
+                                        {{ character.category }} 
+                                    </div>
+                                    <div class="card-description-box" style="background-image: url('/static/images/cards/{{ character.technical_name }}/{{ character.technical_name }}-text-box.png');">
+                                        <div class="card-ability-section">   
+                                            <div class="card-ability-header">
+                                                <div class="card-text-label-wrapper">
+                                                    <span class="card-text-label label-ability">Ability</span>
+                                                </div>
+                                                <span class="card-ability-name">
+                                                    {{ character.ability }}
+                                                </span>
+                                            </div>
+                                            <p class="card-description-text">
+                                                {{ character.ability_description }}
+                                            </p>
+                                        </div>
+                                    </div>   
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="section-title-wrapper">
+            <h2 class="section-title">Choose Your Challenge</h2>
+            <p class="section-subtitle">Explore topics and master the ranks from Bronze to Legendary.</p>
+        </div>
+
+        <div class="showcase-container">
+            <div class="showcase-column">
+                <h3 class="showcase-title">Browse by Topic</h3>
+                <ul class="topics-list">
+                    {% for category in categories %}
+                    <li>
+                        <span class="category-tag">
+                            <img src="{% static 'icons/'|add:category.icon_filename %}" alt="{{ category.name }} Icon" class="category-icon">
+                            {{ category.name }}
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <div class="showcase-column">
+                <h3 class="showcase-title">Master the Ranks</h3>
+                <div class="difficulty-list">
+                    <div class="difficulty-item">
+                        <span class="level-tag bronze">Bronze</span>
+                        <p>Start with the fundamentals and build your confidence.</p>
+                    </div>
+                    <div class="difficulty-item">
+                        <span class="level-tag silver">Silver</span>
+                        <p>Tackle complex challenges and refine your skills.</p>
+                    </div>
+                    <div class="difficulty-item">
+                        <span class="level-tag gold">Gold</span>
+                        <p>Prove your mastery with expert-level problems.</p>
+                    </div>
+                    <div class="difficulty-item">
+                        <span class="level-tag legendary">Legendary</span>
+                        <p>Become a 10x developer using legendary problems.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title-wrapper">
+            <h2 class="section-title">Pokemon X Leetcode</h2>
+            <p class="section-subtitle">See if you can solve them all.</p>
+        </div>
+
+        <div class="track-viewport">
+            <div class="card-track-left">
+                {% for character in all_characters %}
+                    <div class="character-card {% if character.user_level == 'blank' %}not-achieved{% endif %}">
+                        <div class="card-outer-border level-{{ character.user_level|lower|default:'none' }}"> 
+                            <div class="card-border">
+                                <div class="card-body" style="background-image: url('/static/images/cards/{{ character.technical_name }}/{{ character.technical_name }}-background-frame.png');">
+                                    <div class="card-art-frame">
+                                        <img class="card-art" src="{% get_static_prefix %}images/cards/{{ character.technical_name }}/{{ character.technical_name }}-art-frame.png" alt="{{ character.display_name }}">
+                                    </div>
+                                    <div class="card-name-plate">
+                                        {{ character.display_name }}
+                                    </div>
+                                    <div class="card-level-plate">
+                                        Level {{ numbers|random }}
+                                    </div>
+                                    <div class="card-type-plate">
+                                        {{ character.category }} 
+                                    </div>
+                                    <div class="card-description-box" style="background-image: url('/static/images/cards/{{ character.technical_name }}/{{ character.technical_name }}-text-box.png');">
+                                        <div class="card-ability-section">   
+                                            <div class="card-ability-header">
+                                                <div class="card-text-label-wrapper">
+                                                    <span class="card-text-label label-ability">Ability</span>
+                                                </div>
+                                                <span class="card-ability-name">
+                                                    {{ character.ability }}
+                                                </span>
+                                            </div>
+                                            <p class="card-description-text">
+                                                {{ character.ability_description }}
+                                            </p>
+                                        </div>
+                                    </div>   
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                <!-- why do they keep jumping......... -->
+                {% for character in all_characters %}
+                    <div class="character-card {% if character.user_level == 'blank' %}not-achieved{% endif %}">
+                        <div class="card-outer-border level-{{ character.user_level|lower|default:'none' }}"> 
+                            <div class="card-border">
+                                <div class="card-body" style="background-image: url('/static/images/cards/{{ character.technical_name }}/{{ character.technical_name }}-background-frame.png');">
+                                    <div class="card-art-frame">
+                                        <img class="card-art" src="{% get_static_prefix %}images/cards/{{ character.technical_name }}/{{ character.technical_name }}-art-frame.png" alt="{{ character.display_name }}">
+                                    </div>
+                                    <div class="card-name-plate">
+                                        {{ character.display_name }}
+                                    </div>
+                                    <div class="card-level-plate">
+                                        Level {{ numbers|random }}
+                                    </div>
+                                    <div class="card-type-plate">
+                                        {{ character.category }} 
+                                    </div>
+                                    <div class="card-description-box" style="background-image: url('/static/images/cards/{{ character.technical_name }}/{{ character.technical_name }}-text-box.png');">
+                                        <div class="card-ability-section">   
+                                            <div class="card-ability-header">
+                                                <div class="card-text-label-wrapper">
+                                                    <span class="card-text-label label-ability">Ability</span>
+                                                </div>
+                                                <span class="card-ability-name">
+                                                    {{ character.ability }}
+                                                </span>
+                                            </div>
+                                            <p class="card-description-text">
+                                                {{ character.ability_description }}
+                                            </p>
+                                        </div>
+                                    </div>   
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="text-window-display">
+            <div class="text-window-content">
+                <h1 class="display-title">Solutions For Everyone</h1>
+                <p class="display-subtitle">Find multiple solutions with detailed explanations for every problem, making sure no concept goes misunderstood.</p>
+                <div class="display-cta">
+                    <a href="{% url 'signup_view' %}" class="primary-button">Let's Code</a>
+                    <a href="{% url 'login_view' %}" class="display-button">Continue Solving</a>
+                </div>
+            </div>
+
+            <div class="display-right-column">
+                <div class="display-graphic">
+                    <img src="{% static 'images/two-sum-solution-brute.png' %}" alt="Problem Page">
+                </div>
+                
+            </div>
+        </div>
+
+    </main>
+
+</body>
+</html>

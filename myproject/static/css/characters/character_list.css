@@ -159,7 +159,9 @@ a {
 .level-tag.gold   { 
     color: #FFD700; 
 }
-
+.level-tag.legendary {
+    color: #9750DD;
+}
 
 .character-grid {
     display: grid;
@@ -170,7 +172,9 @@ a {
 
 .character-card {
     height: 420px;
+    width: 300px;
     transition: all 0.3s ease;
+    flex-shrink: 0;
 }
 
 #category-section .topics-list li.hidden {

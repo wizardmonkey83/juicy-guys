@@ -16,7 +16,7 @@
 </head>
 <body>
     <header class="main-header">
-        <div class="logo">Juicy Guys</div>
+        <div class="logo"><a href="{% url 'index' %}">Juicy Guys</a></div>
         <nav class="main-nav">
             <ul>
                 <li><a href="{% url 'load_about' %}">About</a></li>
@@ -34,15 +34,32 @@
     <main>
         <section class="about-frame">
             <div class="about-description">
-                <h1 class="profile-username">About Juicy Guys</h1>
-                <p class="line">I came accross the idea for Juicy Guys on a bike ride in late September.</p>
-                <p class="line">The route I was on took me past the house of a highschool friend.</p>
+                <h1 class="profile-username">How Juicy Guys Came to Be</h1>
+                <p class="line">
+                    I came accross the idea for Juicy Guys on a bike ride in late September. 
+                    The route I was on took me past the house of a highschool friend, and as I biked past I remembered a certain class we had. 
+                    During that class, while I was doing work, I looked over at his desk and saw him drawing something.
+                    That something was the first rendering of a Juicy Guy. 
+                    For the rest of the day I thought about making a card game that revolved around Juicy Guys but when morning came the idea was completely forgotten.
+                </p>
+                <p class="line">
+                    That is, until now.
+                </p>
+                <p class="line">
+                    During the rest of my ride, I thought about how I could bring Juicy Guys to life, and landed on making a Leetcode style code evaluation platform with a twist.
+                    So I got home and began working. Fast forward a month and a half later, Juicy Guys is ready for its first release. 
+                </p>
+                <p class="line">
+                    This was definitely an undertaking. 
+                    I struggled every step of the way, especially on the code evaluation part of the code evaluation platform :). 
+                    But with troubleshooting help from Stack Overflow, and a bit of advice from Gemini, Juicy Guys is open for service.
+                </p>
 
             </div>
             <div>
                 <div class="photo-container">
-                    <img src="path to a photo of me" alt="Photo of me" width="set" height="set"/>
-                    <p class="line">caption about photo</p>
+                    <img src="{% static 'images/about_me_profile_pic.jpg' %}" alt="Photo of me" width="360" height="475"/>
+                    <p class="line">Calm luh description</p>
                 </div>
 
                 <div class="social-links">

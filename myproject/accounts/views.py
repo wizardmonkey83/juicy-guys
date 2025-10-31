@@ -12,7 +12,10 @@ from django.contrib.auth.models import User
 from .models import Profile, Submission, Badge
 from .forms import SignUpForm, LoginForm, ChangeUsernameForm, UploadProfilePictureForm, EditProfileForm
 
-from problems.models import UserProblem, Problem
+from problems.models import UserProblem, Problem, Category
+from characters.models import Character, UserCharacter
+
+import random
 
 # Create your views here.
 
@@ -30,8 +33,8 @@ def signup_view(request):
                 messages.error(request, "Username and/or Email already exists")
 
             user = form.save()
-            login(request, user)
-            return redirect("user_home")
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            return redirect("index")
         
     else:
         form = SignUpForm()
@@ -42,6 +45,10 @@ def signup_view(request):
 def user_created(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
+        # so that the cards appear as not achieved
+        characters = Character.objects.all()
+        for character in characters:
+            UserCharacter.objects.create(user=instance, character=character, level="blank", problems_solved_count=0)
 
 def login_view(request):
     if request.method == "POST":
@@ -52,7 +59,7 @@ def login_view(request):
             user = authenticate(request, username=username, password=password)
             if user is not None:
                 login(request, user)
-                return redirect("user_home")
+                return redirect("index")
             else:
                 # not sure if this is the best method for displaying errors unless the message can pop up without reloading or taking the user to another page.
                 messages.error(request, "Invalid Username or Password")
@@ -185,6 +192,14 @@ def save_edit_profile(request):
             return render(request, "accounts/profile/badges_fragment.html", {"badges": badges})
 
 
+# INDEX/ABOUT PAGES ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 def load_about(request):
     return render(request, "about.html")
+
+def load_index(request):
+    all_characters = Character.objects.all()
+    # so levels look dynamic
+    numbers = random.sample(range(1, 101), 30)
+    categories = Category.objects.all()
+    return render(request, "index.html", {"all_characters": all_characters, "numbers": numbers, "categories": categories})

@@ -15,12 +15,17 @@
 </head>
 <body>
     <header class="main-header">
-        <div class="logo">Juicy Guys</div>
+        <div class="logo"><a href="{% url 'index' %}">Juicy Guys</a></div>
         <nav class="main-nav">
             <ul>
+                <li><a href="{% url 'load_about' %}">About</a></li>
+                {% if user.is_authenticated %}
                 <li><a href="{% url 'character_list_window' %}">Characters</a></li>
                 <li><a href="{% url 'problem_list_window' %}">Problems</a></li>
                 <li><a href="{% url 'profile_window' %}">Profile</a></li>
+                {% else %}
+                <li><a href="{% url 'signup_view' %}">Sign Up</a></li>
+                {% endif %}
             </ul>
         </nav>
     </header>

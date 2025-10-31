@@ -1,0 +1,298 @@
+body {
+    background-color: #1A1A1A;
+    color: #EFEFEF;
+    font-family: "DM Sans", sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 2rem;
+    background-color: #252525;
+    border-bottom: 1px solid #3a3a3a;
+}
+
+.logo {
+    font-family: "Jersey 10", sans-serif;
+    font-size: 1.5rem;
+    font-weight: 100;
+}
+
+.main-nav ul {
+    font-family: "Jersey 10", sans-serif;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 2rem;
+}
+
+.main-nav a {
+    font-size: 1rem;
+    color: #a7a7a7;
+    text-decoration: none;
+    transition: color 0.2s ease-in-out;
+}
+
+.main-nav a:hover {
+    color: #efefef;
+}
+
+.track-viewport {
+    overflow: hidden;
+}
+
+@keyframes infiniteTrackRight {
+    from {
+        transform: translateX(-50%);
+    }
+    to {
+        transform: translateX(0%);
+    }
+}
+.card-track-right {
+    display: flex;
+    animation-duration: 40s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-name: infiniteTrackRight;
+    flex-wrap: nowrap;
+}
+
+@keyframes infiniteTrackLeft {
+    from {
+        transform: translateX(0%);
+    }
+    to {
+        transform: translateX(-50%);
+    }
+}
+.card-track-left {
+    display: flex;
+    animation-duration: 40s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-name: infiniteTrackLeft;
+    flex-wrap: nowrap;
+}
+
+.display-title {
+    font-family: "Jersey 10", sans-serif;
+    font-size: 3.5rem;
+    color: var(--text-primary);
+    line-height: 1.2;
+    margin-bottom: 1.5rem;
+}
+
+.display-subtitle {
+    font-size: 1.25rem;
+    color: #efefef;
+    font-family: "DM Sans", sans-serif;
+    opacity: 0.8;
+    max-width: 700px;
+    margin: 0 auto 2.5rem;
+}
+
+.display-cta {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.text-window-display {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 3rem;
+    text-align: left;
+    min-height: 85vh;
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.text-window-content {
+    flex: 1; 
+}
+
+.display-right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    flex: 1;
+}
+
+.text-window-display .display-subtitle {
+    text-align: left;
+    margin: 0 0 2rem 0;
+    max-width: 450px;
+}
+
+.text-window-display .display-cta {
+    justify-content: flex-start; 
+}
+
+.display-graphic {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.display-graphic img {
+    width: 100%;
+    max-width: 1000px; 
+    height: auto;
+    border-radius: 12px; 
+    border: 1px solid #3a3a3a; 
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.primary-button {
+    display: inline-block;
+    text-decoration: none;
+    background-color: #00B8A3;
+    padding: 0.9rem 1.8rem;
+    border-radius: 8px;
+    font-family: "DM Sans", sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.display-button {
+    display: inline-block;
+    text-decoration: none;
+    background-color: #3a3a3a;
+    padding: 0.9rem 1.8rem;
+    border-radius: 8px;
+    font-family: "DM Sans", sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.section-title-wrapper {
+    text-align: center;
+    padding: 3rem 2rem 1.5rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.section-title {
+    font-family: "Jersey 10", sans-serif;
+    font-size: 2.8rem;
+    color: #EFEFEF;
+    margin: 0;
+}
+
+.section-subtitle {
+    font-size: 1.1rem;
+    color: #a7a7a7;
+    margin-top: 0.5rem;
+}
+
+.showcase-container {
+    display: flex;
+    max-width: 1300px;
+    margin: 1rem auto 4rem;
+    padding: 0 2rem;
+    gap: 2rem;
+}
+
+.showcase-column {
+    flex: 1;
+    background-color: #252525;
+    border: 1px solid #3a3a3a;
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+}
+
+.showcase-title {
+    font-family: "Jersey 10", sans-serif;
+    font-size: 1.8rem;
+    color: #EFEFEF;
+    border-bottom: 1px solid #3a3a3a;
+    padding-bottom: 0.75rem;
+    margin: 0 0 1.5rem;
+}
+
+.category-tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.difficulty-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.difficulty-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.difficulty-item .level-tag {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+
+.difficulty-item p {
+    margin: 0;
+    color: #a7a7a7;
+    line-height: 1.5;
+}
+
+.stat-block-container {
+    width: 91%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+    padding: 1.75rem;
+    background-color: #252525;
+    border: 1px solid #3a3a3a;
+    border-radius: 12px;
+}
+
+.stat-item {
+    flex: 1;
+    text-align: center;
+}
+
+.stat-number {
+    display: block;
+    font-family: "Jersey 10", sans-serif;
+    font-size: 3rem;
+    color: #EFEFEF;
+    line-height: 1.1;
+}
+
+.stat-label {
+    display: block;
+    font-family: "DM Sans", sans-serif;
+    font-size: 1rem;
+    color: #a7a7a7;
+    margin-top: 0.25rem;
+}
+
+.stat-divider {
+    width: 1px;
+    height: 60px;
+    background-color: #3a3a3a;
+}

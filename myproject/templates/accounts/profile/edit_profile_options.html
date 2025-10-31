@@ -4,7 +4,7 @@
         <div class="form-avatar-section">
             <img src="{{ user.profile.profile_picture.url }}" alt="Profile Picture" class="form-avatar-img">
             <div class="form-avatar-upload">
-                <p>Upload a new picture</p>
+                <p id="file_upload_status">Upload a new picture</p>
                 <label for="profile_picture_input" class="form-upload-button">Choose File...</label>
                 <input id="profile_picture_input" name="profile_picture" type="file" accept="image/*"/>
             </div>
@@ -44,3 +44,15 @@
     {% csrf_token %}
     </form>
 </div>
+<script>
+    const pictureUpload = document.getElementById("profile_picture_input");
+    const uploadStatus = document.getElementById("file_upload_status");
+    pictureUpload.addEventListener("change", function showPath() {
+        if (this.files && this.files.length > 0) {
+            uploadStatus.textContent = this.files[0].name;
+        } else {
+            // in case they cancel. i think it wont reload unless i do this....
+            uploadStatus.textContent = 'Upload a new picture';
+        }
+    });
+</script>

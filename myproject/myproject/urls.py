@@ -19,11 +19,12 @@ from django.urls import path, include
 from django.views.generic.base import TemplateView
 from django.contrib.staticfiles.urls import static
 from . import settings
+from accounts.views import load_index
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("", include("social_django.urls", namespace="social")),
-    path("", TemplateView.as_view(template_name="index.html"), name="index"),
+    path("", load_index, name="index"),
     path("signup/", include("django.contrib.auth.urls")),
     path("login/", include("django.contrib.auth.urls")),
 
