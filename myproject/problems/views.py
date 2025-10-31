@@ -126,7 +126,7 @@ def check_run_results(request):
     language_id = request.session.get("run_language_id")
     # the url needs a problem object as an argument
     problem_id = request.session.get("problem_id")
-
+    
     try:
         problem = Problem.objects.get(id=problem_id)
     except Problem.DoesNotExist:
@@ -183,10 +183,22 @@ def check_run_results(request):
             if correct == finished_testcases:
                 passed_testcases = f"{correct}/{finished_testcases}"
                 # print(f"FINISHED RESULTS: {results}")
-                return render(request, "problems/page/output_window.html", {"results": results, "overall_status": "Accepted", "passed_testcases": passed_testcases, "problem": problem})
+                context = {
+                    "results": results, 
+                    "overall_status": "Accepted", 
+                    "passed_testcases": passed_testcases, 
+                    "problem": problem
+                }
+                return render(request, "problems/page/output_window.html", context)
             else:
                 passed_testcases = f"{correct}/{finished_testcases}"
-                return render(request, "problems/page/output_window.html", {"results": results, "overall_status": "Wrong Answer", "passed_testcases": passed_testcases, "problem": problem})
+                context = {
+                    "results": results, 
+                    "overall_status": "Wrong Answer", 
+                    "passed_testcases": passed_testcases, 
+                    "problem": problem
+                }
+                return render(request, "problems/page/output_window.html", context)
         else:
             # keep polling
              # print(f"ELSE RESULTS: {results}")
@@ -225,9 +237,10 @@ def process_submit_code(request):
 
             # the language filter ay not actually be necessary. double check
             testcases = TestCase.objects.filter(problem=problem, language=language)
-
+            print(f"TESTCASES: {testcases}")
             if testcases:
-                tokens = []
+                all_payloads = []
+                ordered_testcase_ids = []
                 for testcase in testcases:
                     stdin_dict = testcase.input_data
                     expected_output = testcase.expected_output
@@ -250,49 +263,63 @@ def process_submit_code(request):
                     full_script_string  = scaffolding_imports + "\n" + source_code + "\n" + driver_script
                     valid_stdin_json = json.dumps(stdin_dict)
                     payload = {"source_code": full_script_string, "language_id": language_id, "stdin": valid_stdin_json, "expected_output": expected_output}
-                    
-                    response = requests.post("http://159.203.137.178:2358/submissions", json=payload)
+                    all_payloads.append(payload)
+                    # so that testcases can be matched with tokens later
+                    ordered_testcase_ids.append(testcase.id)
+                    # something weird with the judge0 api. was sending as list before
+                    batch_body = {
+                        "submissions": all_payloads
+                    }
+
+                try:
+                    response = requests.post("http://159.203.137.178:2358/submissions/batch?base64_encoded=false", json=batch_body)
+                    response.raise_for_status()
                     data = response.json()
-                    token = data["token"]
-                    tokens.append(
-                        {"testcase_id": testcase.id,
-                         "token": token}
-                    )
-                request.session["tokens"] = tokens
-                request.session["problem_id"] = problem_id
-                request.session["language_id"] = language_id
-                request.session["code"] = source_code
-                return render(request, "problems/page/submitting.html")
+                    tokens = []
+                    for testcase_id, token_data in zip(ordered_testcase_ids, data):
+                        tokens.append(
+                            {"testcase_id": testcase_id,
+                            "token": token_data["token"]}
+                        )
+                    request.session["tokens"] = tokens
+                    request.session["submission_results"] = []
+                    request.session["problem_id"] = problem_id
+                    request.session["language_id"] = language_id
+                    request.session["code"] = source_code
+                    return render(request, "problems/page/submitting.html")
+                except requests.exceptions.RequestException as e:
+                    print(f"Something went Wrong. ERROR: {e}")
+                    messages.error(request, f"Something went Wrong. ERROR: {e}")
+                    return render(request, "problems/page/problem_run_response.html")
+            
             else:
                 messages.error(request, "No Testcases Found")
-                return render(request, "problems/problem_run_response.html") 
+                return render(request, "problems/page/problem_run_response.html") 
         else:
             # form is invalid
             messages.error(request, "Invalid Form")
-            return render(request, "problems/problem_run_response.html")
+            return render(request, "problems/page/problem_run_response.html")
 
 
 def check_submit_results(request):
+    print("CHECKING SUBMIT RESULTS")
     tokens = request.session.get("tokens")
     problem_id = request.session.get("problem_id")
     language_id = request.session.get("language_id")
     code = request.session.get("code")
 
-    pending_tokens = tokens[:]
+    results = request.session.get("submission_results", [])
+    pending_tokens = []
     if tokens:
-        results = []
-        correct = 0
-        finished_testcases = 0
-        total_runtime = []
-        total_memory = []
         # TODO fix this --> i think that you are iterating over all testcases, even if they have already been completed. this will be a major waste of time. 
-        for item in pending_tokens:
+        for item in tokens:
             token = item["token"]
             response = requests.get(f'http://159.203.137.178:2358/submissions/{token}')
             data = response.json()
             status = data["status"]["id"]
             # still processing
             if status == 1 or status == 2:
+                pending_tokens.append(item)
                 continue
             # accepted or wrong answer
             elif status == 3 or status == 4:
@@ -313,25 +340,32 @@ def check_submit_results(request):
                         "status_description": status_description,
                         "language_id": language_id,
                         "time": runtime,
-                        "testcase": testcase,
+                        "stdin": testcase.input_data,
+                        "expected_output": testcase.expected_output
                     })
-                    if status == 3:
-                        correct += 1
-                    total_runtime.append(runtime)
-                    total_memory.append(memory)
-                    finished_testcases += 1
+                    # this should add them to the session
+                    request.session["submission_results"] = results
                 except TestCase.DoesNotExist:
                     # TODO this needs to return a fragment
                     messages.error(request, "Unable to Retrieve Testcase")
             else:
-                # runtime error 
+                # runtime error
                 stderr = data["stderr"]
                 status_description = data["status"]["description"]
+
+                del request.session["tokens"]
+                del request.session["submission_results"]
+                del request.session["problem_id"]
+                del request.session["language_id"]
+                del request.session["code"]
+
                 return render(request, "problems/page/output_window.html", {"stderr": stderr, "status_description": status_description})
+            # so that finished testcases arent looped over
+        request.session["tokens"] = pending_tokens
             
         # submission completed (all testcases tested)  
-        if finished_testcases == len(pending_tokens):
-
+        if len(pending_tokens) == 0:
+            # print(f"PROBLEM ID: {problem_id}")
             try:
                 problem = Problem.objects.get(id=problem_id)
             except Problem.DoesNotExist:
@@ -344,7 +378,19 @@ def check_submit_results(request):
 
             num_of_testcases = TestCase.objects.filter(problem=problem, language=language).count()
             # if all testcases were passed (submission accepted)
-            if correct == num_of_testcases:
+            final_correct_count = 0
+            final_total_runtime = []
+            final_total_memory = []
+
+            for result in results:
+                if result["status_id"] == 3:
+                    final_correct_count += 1
+                # if None is returned, 0 replaces it
+                final_total_runtime.append(float(result.get("time", 0) or 0))
+                final_total_memory.append(result.get("memory", 0) or 0)
+
+            # accepted submission
+            if final_correct_count == num_of_testcases:
                 user = request.user
                 user.profile.problems_solved_count += 1
                 user.profile.submissions_made_count += 1
@@ -356,22 +402,26 @@ def check_submit_results(request):
                 # checks to see if level up is needed. 
                 try:
                     # there should only be one character that meets these two filters (difficulty and category), however keep an eye on this as it may change in the future
-                    character = Character.objects.get(difficulty=problem.difficulty, category=problem.category)
+                    character = Character.objects.get(category=problem.category)
+                    # user cannot recieve more problems solved points for problems they have already solved.
+                    user_problem = UserProblem.objects.filter(Q(status="blank") | Q(status="attempted"), user=user, problem=problem)
+
+                    if user_problem:
+                        user_character, created = UserCharacter.objects.get_or_create(user=user, character=character)
+                        user_character.problems_solved_count += 1  
+
+                        if user_character.problems_solved_count == 5:
+                            user_character.level = "bronze"
+                        if user_character.problems_solved_count == 10:
+                            user_character.level = "silver"
+                        if user_character.problems_solved_count == 15:
+                            user_character.level = "gold"
+                        user_character.save()
                 except Character.DoesNotExist:
                     # TODO make this functional
                     messages.error(request, "Unable to locate character")
                 
-                user_character, created = UserCharacter.objects.get_or_create(user=user, character=character)
-                user_character.problems_solved_count += 1  
-
-                if user_character.problems_solved_count == 5:
-                    user_character.level = "bronze"
-                if user_character.problems_solved_count == 10:
-                    user_character.level = "silver"
-                if user_character.problems_solved_count == 15:
-                    user_character.level = "gold"
-                user_character.save()
-
+    
                 user_problem, created = UserProblem.objects.get_or_create(problem=problem, user=user)
                 user_problem.status = "solved"
                 user_problem.save()
@@ -389,25 +439,25 @@ def check_submit_results(request):
                 user.profile.save()
                 problem.save()
 
-            if total_runtime:
-                avg_runtime = sum(total_runtime) / len(total_runtime)
+            if final_total_runtime:
+                avg_runtime = sum(final_total_runtime) / len(final_total_runtime)
             else:
                 avg_runtime = 0
-            if total_memory:
-                avg_memory = sum(total_memory) / len(total_memory)
+            if final_total_memory:
+                avg_memory = sum(final_total_memory) / len(final_total_memory)
             else:
                 avg_memory = 0
 
-            if correct == num_of_testcases:
+            if final_correct_count == num_of_testcases:
                 # this might work. submission is referenced below
                 Submission.objects.create(
                     user=user,
                     problem=problem,
                     language=language,
                     code=code,
-                    testcases_passed=correct,
+                    testcases_passed=final_correct_count,
                     num_of_testcases=num_of_testcases,
-                    status="accepted",
+                    status="Accepted",
                     runtime=avg_runtime,
                     memory=avg_memory,
                 )
@@ -417,9 +467,9 @@ def check_submit_results(request):
                     problem=problem,
                     language=language,
                     code=code,
-                    testcases_passed=correct, 
+                    testcases_passed=final_correct_count, 
                     num_of_testcases=num_of_testcases,
-                    status="wrong_answer",
+                    status="Wrong Answer",
                     runtime=avg_runtime,
                     memory=avg_memory,
                 )
@@ -438,8 +488,8 @@ def check_submit_results(request):
                     user.profile.max_streak = user.profile.current_streak
                 user.profile.last_submission_date = today
                 user.profile.save()
-
-
+            # TODO ill add badges later. cant be bothered.
+            """
             # GOAT badge (messi)
             if user.profile.acceptance_rate >= .95:
                 # this will return an error until i create the badge
@@ -484,20 +534,43 @@ def check_submit_results(request):
                     pass
                 else:
                     user.profile.badges.add(badge)
-
+            """
             # so that tokens dont interfere with other processes
             del request.session["tokens"]
+            del request.session["submission_results"]
             del request.session["problem_id"]
             del request.session["language_id"]
             del request.session["code"]
 
-            context = {
-                "results": results,
-                "submission_was_successful": True,
-                "problem": problem,
-                "language_id": language.judge0_id
-            }
-            return render(request, "problems/page/output_window.html", context)
+            # list() makes the query execute once
+            example_inputs = list(ExampleTestcase.objects.filter(problem=problem).values_list('input_data', flat=True))
+            # so that only the example testcases are displayed to the frontend
+            display_results = [result for result in results if result["stdin"] in example_inputs]
+
+            if final_correct_count == num_of_testcases:
+                testcases_passed = f"{final_correct_count}/{num_of_testcases}"
+                context = {
+                    "results": display_results,
+                    "submission_was_successful": True,
+                    "passed_testcases": testcases_passed,
+                    "overall_status": "Accepted",
+                    "problem": problem,
+                    "language_id": language.judge0_id
+                }
+                # print(f"ACCEPTED CONTEXT: {context}")
+                return render(request, "problems/page/output_window.html", context)
+            else:
+                testcases_passed = f"{final_correct_count}/{num_of_testcases}"
+                context = {
+                    "results": results,
+                    "submission_was_successful": True,
+                    "problem": problem,
+                    "overall_status": "Wrong Answer",
+                    "passed_testcases": testcases_passed,
+                    "language_id": language.judge0_id
+                }
+                # print(f"WRONG CONTEXT: {context}")
+                return render(request, "problems/page/output_window.html", context)
 
         else:
             # keep polling
