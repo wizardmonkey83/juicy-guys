@@ -66,3 +66,5 @@ def filter_character_categories(request):
                 user_characters = UserCharacter.objects.filter(user=user, character=OuterRef("pk"))
                 characters = Character.objects.filter(category=category).annotate(problems_solved_count=Subquery(user_characters.values("problems_solved_count")[:1]), user_level=Subquery(user_characters.values("level")[:1]))
                 return render(request, "characters/filter_characters_fragment.html", {"characters": characters})
+            
+
