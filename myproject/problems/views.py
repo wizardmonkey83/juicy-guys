@@ -250,63 +250,58 @@ def process_submit_code(request):
             # the language filter ay not actually be necessary. double check
             testcases = TestCase.objects.filter(problem=problem, language__judge0_id=71)
             print(f"TESTCASES: {testcases}")
+            # going back to singular submissions. issue might havee been that  the batch size was too big for judge0 to handle
             if testcases:
-                all_payloads = []
-                ordered_testcase_ids = []
-                for testcase in testcases:
-                    stdin_dict = testcase.input_data
-                    expected_output = testcase.expected_output
-
-                    class_name = problem.class_name
-                    method_name = problem.method_name
-
-                    if language.judge0_id == 71:
-                        # script to prep submission for judge0
-                        scaffolding_imports = "import sys\nimport json\nfrom typing import List, Dict, Set, Tuple, Optional\n"
-                        driver_script = textwrap.dedent(f"""
-                        try:
-                            data = json.loads(sys.stdin.read())
-                            instance = {class_name}()
-                            method_to_call = getattr(instance, "{method_name}")
-                            result = method_to_call(**data)
-                            print(result)
-                        except Exception as error:
-                            print(f"Execution error: {{error}}", file=sys.stderr)
-                        """)
-                        full_script_string = scaffolding_imports + "\n" + source_code + "\n" + driver_script
-                    else:
-                        full_script_string = source_code
-
-                    valid_stdin_json = json.dumps(stdin_dict)
-                    payload = {"source_code": full_script_string, "language_id": language_id, "stdin": valid_stdin_json, "expected_output": expected_output}
-                    all_payloads.append(payload)
-                    # so that testcases can be matched with tokens later
-                    ordered_testcase_ids.append(testcase.id)
-                # something weird with the judge0 api. was sending as list before
-                batch_body = {
-                    "submissions": all_payloads
-                }
-                print(f"BATCH BODY: {batch_body}")
-
+                tokens = []
                 try:
-                    response = requests.post("http://159.203.137.178:2358/submissions/batch", json=batch_body)
-                    response.raise_for_status()
-                    data = response.json()
-                    tokens = []
-                    for testcase_id, token_data in zip(ordered_testcase_ids, data):
+                    for testcase in testcases:
+                        stdin_dict = testcase.input_data
+                        expected_output = testcase.expected_output
+
+                        class_name = problem.class_name
+                        method_name = problem.method_name
+
+                        if language.judge0_id == 71:
+                            scaffolding_imports = "import sys\nimport json\nfrom typing import List, Dict, Set, Tuple, Optional\n"
+                            driver_script = textwrap.dedent(f"""
+                            try:
+                                data = json.loads(sys.stdin.read())
+                                instance = {class_name}()
+                                method_to_call = getattr(instance, "{method_name}")
+                                result = method_to_call(**data)
+                                print(result)
+                            except Exception as error:
+                                print(f"Execution error: {{error}}", file=sys.stderr)
+                            """)
+                            full_script_string = scaffolding_imports + "\n" + source_code + "\n" + driver_script
+                        else:
+                            full_script_string = source_code
+
+                        valid_stdin_json = json.dumps(stdin_dict)
+                        
+
+                        payload = {"source_code": full_script_string, "language_id": language_id, "stdin": valid_stdin_json, "expected_output": expected_output}
+                        
+                        response = requests.post("http://159.203.137.178:2358/submissions", json=payload)
+                        response.raise_for_status() 
+                        data = response.json()
+                    
                         tokens.append(
-                            {"testcase_id": testcase_id,
-                            "token": token_data["token"]}
+                            {"testcase_id": testcase.id,
+                             "token": data["token"]}
                         )
+
                     request.session["tokens"] = tokens
                     request.session["submission_results"] = []
                     request.session["problem_id"] = problem_id
                     request.session["language_id"] = language_id
                     request.session["code"] = source_code
+                    
                     return render(request, "problems/page/submitting.html")
+
                 except requests.exceptions.RequestException as e:
-                    print(f"Something went Wrong. ERROR: {e}")
-                    messages.error(request, f"Something went Wrong. ERROR: {e}")
+                    # to troubleshoot, pass e into the f string, for now leaving it as this. 
+                    messages.error(request, f"Something went Wrong")
                     return render(request, "problems/page/problem_run_response.html")
             
             else:
