@@ -252,14 +252,14 @@ def process_submit_code(request):
             print(f"TESTCASES: {testcases}")
             # going back to singular submissions. issue might havee been that  the batch size was too big for judge0 to handle
             if testcases:
-                tokens = []
+                submissions_payload = []
+                # to map testcases back to tokens
+                testcase_id_map = {}
+                
                 try:
-                    for testcase in testcases:
+                    for i, testcase in enumerate(testcases):
                         stdin_dict = testcase.input_data
                         expected_output = testcase.expected_output
-
-                        class_name = problem.class_name
-                        method_name = problem.method_name
 
                         if language.judge0_id == 71:
                             scaffolding_imports = "import sys\nimport json\nfrom typing import List, Dict, Set, Tuple, Optional\n"
@@ -278,18 +278,29 @@ def process_submit_code(request):
                             full_script_string = source_code
 
                         valid_stdin_json = json.dumps(stdin_dict)
-                        
 
-                        payload = {"source_code": full_script_string, "language_id": language_id, "stdin": valid_stdin_json, "expected_output": expected_output}
+                        submissions_payload.append({
+                            "source_code": full_script_string, 
+                            "language_id": language_id, 
+                            "stdin": valid_stdin_json, 
+                            "expected_output": expected_output
+                        })
                         
-                        response = requests.post("http://159.203.137.178:2358/submissions", json=payload)
-                        response.raise_for_status() 
-                        data = response.json()
+                        # so that these dont get mixed up
+                        testcase_id_map[i] = testcase.id
+
+                    batch_payload = {"submissions": submissions_payload}
+                    response = requests.post("http://159.203.137.178:2358/submissions/batch", json=batch_payload)
+                    response.raise_for_status() 
+                    data = response.json()
                     
-                        tokens.append(
-                            {"testcase_id": testcase.id,
-                             "token": data["token"]}
-                        )
+                    tokens = []
+                    for i, token_data in enumerate(data):
+                        testcase_id = testcase_id_map[i]
+                        tokens.append({
+                            "testcase_id": testcase_id,
+                            "token": token_data["token"]
+                        })
 
                     request.session["tokens"] = tokens
                     request.session["submission_results"] = []
