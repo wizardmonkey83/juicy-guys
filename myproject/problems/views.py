@@ -291,15 +291,8 @@ def process_submit_code(request):
 
                     batch_payload = {"submissions": submissions_payload}
 
-                    print("--- START: JUDGE0 BATCH PAYLOAD ---")
-                    try:
-                        # This will pretty-print the JSON data
-                        import json
-                        print(json.dumps(batch_payload, indent=2))
-                    except Exception as e:
-                        print(f"Could not dump JSON: {e}")
-                    print("--- END: JUDGE0 BATCH PAYLOAD ---")
                     
+
                     response = requests.post("http://159.203.137.178:2358/submissions/batch?wait=false", json=batch_payload)
                     response.raise_for_status() 
                     data = response.json()
