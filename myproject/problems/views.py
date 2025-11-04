@@ -312,7 +312,6 @@ def process_submit_code(request):
                     print("--- START: JUDGE0 BATCH PAYLOAD ---")
                     try:
                         # This will pretty-print the JSON data
-                        import json
                         print(json.dumps(batch_payload, indent=2))
                     except Exception as e:
                         print(f"Could not dump JSON: {e}")
