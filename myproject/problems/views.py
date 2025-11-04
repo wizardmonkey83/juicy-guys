@@ -248,7 +248,7 @@ def process_submit_code(request):
             parameter_names = problem.parameter_names
 
             # the language filter ay not actually be necessary. double check
-            testcases = TestCase.objects.filter(problem=problem, language=language)
+            testcases = TestCase.objects.filter(problem=problem)
             print(f"TESTCASES: {testcases}")
             if testcases:
                 all_payloads = []
