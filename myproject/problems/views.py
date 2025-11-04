@@ -403,6 +403,7 @@ def check_submit_results(request):
         print(f"PERFORMED FOR LOOP")
         # so that finished testcases arent looped over
         request.session["tokens"] = pending_tokens
+        print(f"TOKENS: {tokens}")
         print(f"PENDING TOKENS FOR LOOP FINISHED: {pending_tokens}")
             
         # submission completed (all testcases tested)  
