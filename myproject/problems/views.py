@@ -248,7 +248,7 @@ def process_submit_code(request):
             parameter_names = problem.parameter_names
 
             # the language filter ay not actually be necessary. double check
-            testcases = TestCase.objects.filter(problem=problem, language__in=[language])
+            testcases = TestCase.objects.filter(problem=problem, language__judge0_id=71)
             print(f"TESTCASES: {testcases}")
             if testcases:
                 all_payloads = []
@@ -286,6 +286,7 @@ def process_submit_code(request):
                 batch_body = {
                     "submissions": all_payloads
                 }
+                print(f"BATCH BODY: {batch_body}")
 
                 try:
                     response = requests.post("http://159.203.137.178:2358/submissions/batch", json=batch_body)
