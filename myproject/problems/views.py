@@ -399,14 +399,17 @@ def check_submit_results(request):
                 del request.session["code"]
 
                 return render(request, "problems/page/output_window.html", context)
+        print(f"PERFORMED FOR LOOP")
         # so that finished testcases arent looped over
         request.session["tokens"] = pending_tokens
+        print(f"PENDING TOKENS FOR LOOP FINISHED: {pending_tokens}")
             
         # submission completed (all testcases tested)  
         if len(pending_tokens) == 0:
             try:
                 problem = Problem.objects.get(id=problem_id)
                 print(f"PROBLEM ID: {problem_id}")
+                print(f"PENDING TOKENS ALL TESTCASES PASSED: {pending_tokens}")
             except Problem.DoesNotExist:
                 # TODO make this functional
                 messages.error(request, "Unable to locate problem")
