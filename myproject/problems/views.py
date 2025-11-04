@@ -322,7 +322,10 @@ def check_submit_results(request):
     code = request.session.get("code")
 
     results = request.session.get("submission_results", [])
+
     pending_tokens = []
+    # so that multiple of the same ones arent repeated over multiple for loops. may not be neccesarry, more of a "in case"
+    processed_tokens = set()
     if tokens:
         tokens_strings = [item["token"] for item in tokens]
         tokens_formatted = ",".join(tokens_strings)
@@ -330,17 +333,16 @@ def check_submit_results(request):
 
         response = requests.get(f"http://159.203.137.178:2358/submissions/batch?tokens={tokens_formatted}")
         data = response.json()
+
+
         # judge0 returns the submissions as a dictionary, so instead of iterating over data, i shouldve been iterating over each submission in data.
         for submission in data.get("submissions", []):
             token = submission["token"]
             status = submission["status"]["id"]
             testcase_id = tokens_and_testcase_ids.get(token)
-            # still processing
-            if status == 1 or status == 2:
-                pending_tokens.append({"token": token, "testcase_id": testcase_id})
-                continue
             # accepted or wrong answer
-            elif status == 3 or status == 4:
+            processed_tokens.add(token)
+            if status == 3 or status == 4:
                 stdout = submission["stdout"]
                 stderr = submission["stderr"]
                 status_id = submission["status"]["id"]
@@ -400,18 +402,17 @@ def check_submit_results(request):
                 del request.session["code"]
 
                 return render(request, "problems/page/output_window.html", context)
-        print(f"PERFORMED FOR LOOP")
+        
+        for item in tokens:
+            if item["token"] not in processed_tokens:
+                pending_tokens.append(item)
         # so that finished testcases arent looped over
         request.session["tokens"] = pending_tokens
-        print(f"TOKENS: {tokens}")
-        print(f"PENDING TOKENS FOR LOOP FINISHED: {pending_tokens}")
             
         # submission completed (all testcases tested)  
         if len(pending_tokens) == 0:
             try:
                 problem = Problem.objects.get(id=problem_id)
-                print(f"PROBLEM ID: {problem_id}")
-                print(f"PENDING TOKENS ALL TESTCASES PASSED: {pending_tokens}")
             except Problem.DoesNotExist:
                 # TODO make this functional
                 messages.error(request, "Unable to locate problem")
