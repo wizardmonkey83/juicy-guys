@@ -329,14 +329,14 @@ def check_submit_results(request):
 
         response = requests.get(f"http://159.203.137.178:2358/submissions/batch?tokens={tokens_formatted}")
         data = response.json()
-
-        for submission in data:
+        # judge0 returns the submissions as a dictionary, so instead of iterating over data, i shouldve been iterating over each submission in data.
+        for submission in data.get("submissions", []):
             token = submission["token"]
             status = submission["status"]["id"]
             testcase_id = tokens_and_testcase_ids.get(token)
             # still processing
             if status == 1 or status == 2:
-                pending_tokens.append(token)
+                pending_tokens.append({"token": token, "testcase_id": testcase_id})
                 continue
             # accepted or wrong answer
             elif status == 3 or status == 4:
