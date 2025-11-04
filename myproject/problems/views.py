@@ -316,13 +316,14 @@ def process_submit_code(request):
 def check_submit_results(request):
     print("CHECKING SUBMIT RESULTS")
     tokens = request.session.get("tokens")
+    print(f"TOKENS: {tokens}")
     problem_id = request.session.get("problem_id")
     language_id = request.session.get("language_id")
     code = request.session.get("code")
 
     results = request.session.get("submission_results", [])
+    pending_tokens = []
     if tokens:
-        pending_tokens = []
         tokens_strings = [item["token"] for item in tokens]
         tokens_formatted = ",".join(tokens_strings)
         tokens_and_testcase_ids = {item["token"]: item["testcase_id"] for item in tokens}
@@ -373,7 +374,7 @@ def check_submit_results(request):
                 try:
                     problem = Problem.objects.get(id=problem_id)
                 except Problem.DoesNotExist:
-                    # shouldve just been doing this al along
+                    # shouldve just been doing this all along
                     problem = None 
 
                 try:
@@ -619,7 +620,6 @@ def check_submit_results(request):
             return HttpResponse(status=204)
     
     else:
-        print("NO TOKENS FOUND")
         return HttpResponse(status=204)
 
 
