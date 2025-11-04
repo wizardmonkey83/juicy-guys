@@ -323,27 +323,32 @@ def check_submit_results(request):
     results = request.session.get("submission_results", [])
     pending_tokens = []
     if tokens:
-        # TODO fix this --> i think that you are iterating over all testcases, even if they have already been completed. this will be a major waste of time. 
-        for item in tokens:
-            token = item["token"]
-            response = requests.get(f'http://159.203.137.178:2358/submissions/{token}')
-            data = response.json()
-            status = data["status"]["id"]
+        tokens_strings = [item["token"] for item in tokens]
+        tokens_formatted = ",".join(tokens_strings)
+        tokens_and_testcase_ids = {item["token"]: item["testcase_id"] for item in tokens}
+
+        response = requests.get(f"http://159.203.137.178:2358/submissions/batch?tokens={tokens_formatted}")
+        data = response.json()
+
+        for submission in data:
+            token = submission["token"]
+            status = submission["status"]["id"]
+            testcase_id = tokens_and_testcase_ids.get(token)
             # still processing
             if status == 1 or status == 2:
-                pending_tokens.append(item)
+                pending_tokens.append(token)
                 continue
             # accepted or wrong answer
             elif status == 3 or status == 4:
-                stdout = data["stdout"]
-                stderr = data["stderr"]
-                status_id = data["status"]["id"]
-                status_description = data["status"]["description"]
-                runtime = data["time"]
-                memory = data["memory"]
+                stdout = submission["stdout"]
+                stderr = submission["stderr"]
+                status_id = submission["status"]["id"]
+                status_description = submission["status"]["description"]
+                runtime = submission["time"]
+                memory = submission["memory"]
 
                 try:
-                    testcase = TestCase.objects.get(id=item["testcase_id"])
+                    testcase = TestCase.objects.get(id=testcase_id)
 
                     results.append({
                         "stdout": stdout,
@@ -362,8 +367,8 @@ def check_submit_results(request):
                     messages.error(request, "Unable to Retrieve Testcase")
             else:
                 # runtime error
-                stderr = data["stderr"]
-                status_description = data["status"]["description"]
+                stderr = submission["stderr"]
+                status_description = submission["status"]["description"]
 
                 try:
                     problem = Problem.objects.get(id=problem_id)
@@ -372,7 +377,7 @@ def check_submit_results(request):
                     problem = None 
 
                 try:
-                    testcase = TestCase.objects.get(id=item["testcase_id"])
+                    testcase = TestCase.objects.get(id=testcase_id)
                     stdin_data = testcase.input_data
                     expected_output_data = testcase.expected_output
                 except TestCase.DoesNotExist:
@@ -394,7 +399,7 @@ def check_submit_results(request):
                 del request.session["code"]
 
                 return render(request, "problems/page/output_window.html", context)
-            # so that finished testcases arent looped over
+        # so that finished testcases arent looped over
         request.session["tokens"] = pending_tokens
             
         # submission completed (all testcases tested)  
