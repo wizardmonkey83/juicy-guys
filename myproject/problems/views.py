@@ -342,7 +342,9 @@ def check_submit_results(request):
             testcase_id = tokens_and_testcase_ids.get(token)
             # accepted or wrong answer
             processed_tokens.add(token)
-            if status == 3 or status == 4:
+            if status == 1 or status == 2:
+                continue
+            elif status == 3 or status == 4:
                 stdout = submission["stdout"]
                 stderr = submission["stderr"]
                 status_id = submission["status"]["id"]
