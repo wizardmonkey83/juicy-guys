@@ -283,9 +283,9 @@ def process_submit_code(request):
                     # so that testcases can be matched with tokens later
                     ordered_testcase_ids.append(testcase.id)
                 # something weird with the judge0 api. was sending as list before
-                batch_body = {
-                    "submissions": all_payloads
-                }
+                    batch_body = {
+                        "submissions": all_payloads
+                    }
 
                 try:
                     response = requests.post("http://159.203.137.178:2358/submissions/batch", json=batch_body)
