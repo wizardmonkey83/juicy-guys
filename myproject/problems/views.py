@@ -66,6 +66,7 @@ def process_run_code(request):
                         except json.JSONDecodeError:
                             # ggeez
                             pass
+                    
                     # when the "run" button is pressed twice, for some reason its sending the json back with extra backslashes. this might fix it 
                     if isinstance(stdin_dict, str):
                         try:
@@ -73,20 +74,31 @@ def process_run_code(request):
                         except json.JSONDecodeError:
                             stdin_dict = ast.literal_eval(stdin_string)
 
-                    # print(f"STDIN_DICT: {stdin_dict}")
-                    # textwrap solves indentation error
-                    # instance creates the instance of the solution class
-                    driver_script = textwrap.dedent(f"""
                     try:
-                        data = json.loads(sys.stdin.read())
-                        instance = {class_name}()
-                        method_to_call = getattr(instance, "{method_name}")
-                        result = method_to_call(**data)
-                        print(result)
-                    except Exception as error:
-                        print(f"Execution error: {{error}}", file=sys.stderr)
-                    """)
-                    full_script_string  = scaffolding_imports + "\n" + source_code + "\n" + driver_script
+                        language = Language.objects.get(judge0_id=language_id)
+                    except Language.DoesNotExist:
+                        messages.error(request, "Selected language not found.")
+                        return render(request, "problems/page/problem_run_response.html")
+
+                    # this only works for python
+                    if language.judge0_id == 71:
+                        # print(f"STDIN_DICT: {stdin_dict}")
+                        # textwrap solves indentation error
+                        # instance creates the instance of the solution class
+                        driver_script = textwrap.dedent(f"""
+                        try:
+                            data = json.loads(sys.stdin.read())
+                            instance = {class_name}()
+                            method_to_call = getattr(instance, "{method_name}")
+                            result = method_to_call(**data)
+                            print(result)
+                        except Exception as error:
+                            print(f"Execution error: {{error}}", file=sys.stderr)
+                        """)
+                        full_script_string  = scaffolding_imports + "\n" + source_code + "\n" + driver_script
+                    else:
+                        # just using the source code from the problem for now. might make more robust later
+                        full_script_string = source_code
                     valid_stdin_json = json.dumps(stdin_dict)
                     payload = {"source_code": full_script_string, "language_id": language_id, "stdin": valid_stdin_json, "expected_output": expected_output}
 
@@ -245,31 +257,35 @@ def process_submit_code(request):
                     stdin_dict = testcase.input_data
                     expected_output = testcase.expected_output
 
-                    # script to prep submission for judge0
-                    scaffolding_imports = "import sys\nimport json\nfrom typing import List, Dict, Set, Tuple, Optional\n"
                     class_name = problem.class_name
                     method_name = problem.method_name
 
-                    driver_script = textwrap.dedent(f"""
-                    try:
-                        data = json.loads(sys.stdin.read())
-                        instance = {class_name}()
-                        method_to_call = getattr(instance, "{method_name}")
-                        result = method_to_call(**data)
-                        print(result)
-                    except Exception as error:
-                        print(f"Execution error: {{error}}", file=sys.stderr)
-                    """)
-                    full_script_string  = scaffolding_imports + "\n" + source_code + "\n" + driver_script
+                    if language.judge0_id == 71:
+                        # script to prep submission for judge0
+                        scaffolding_imports = "import sys\nimport json\nfrom typing import List, Dict, Set, Tuple, Optional\n"
+                        driver_script = textwrap.dedent(f"""
+                        try:
+                            data = json.loads(sys.stdin.read())
+                            instance = {class_name}()
+                            method_to_call = getattr(instance, "{method_name}")
+                            result = method_to_call(**data)
+                            print(result)
+                        except Exception as error:
+                            print(f"Execution error: {{error}}", file=sys.stderr)
+                        """)
+                        full_script_string = scaffolding_imports + "\n" + source_code + "\n" + driver_script
+                    else:
+                        full_script_string = source_code
+
                     valid_stdin_json = json.dumps(stdin_dict)
                     payload = {"source_code": full_script_string, "language_id": language_id, "stdin": valid_stdin_json, "expected_output": expected_output}
                     all_payloads.append(payload)
                     # so that testcases can be matched with tokens later
                     ordered_testcase_ids.append(testcase.id)
-                    # something weird with the judge0 api. was sending as list before
-                    batch_body = {
-                        "submissions": all_payloads
-                    }
+                # something weird with the judge0 api. was sending as list before
+                batch_body = {
+                    "submissions": all_payloads
+                }
 
                 try:
                     response = requests.post("http://159.203.137.178:2358/submissions/batch?base64_encoded=false", json=batch_body)
