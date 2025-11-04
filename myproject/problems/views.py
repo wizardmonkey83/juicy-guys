@@ -278,7 +278,9 @@ def process_submit_code(request):
                         full_script_string = source_code
 
                     valid_stdin_json = json.dumps(stdin_dict)
-                    payload = {"source_code": full_script_string, "language_id": language_id, "stdin": valid_stdin_json, "expected_output": expected_output}
+                    # might solve submission issue thats happening in production. forces a string to be sent to judge0
+                    stringified_expected_output = json.dumps(expected_output)
+                    payload = {"source_code": full_script_string, "language_id": language_id, "stdin": valid_stdin_json, "expected_output": stringified_expected_output}
                     all_payloads.append(payload)
                     # so that testcases can be matched with tokens later
                     ordered_testcase_ids.append(testcase.id)
