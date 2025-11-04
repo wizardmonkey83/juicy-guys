@@ -288,7 +288,7 @@ def process_submit_code(request):
                 }
 
                 try:
-                    response = requests.post("http://159.203.137.178:2358/submissions/batch?base64_encoded=false", json=batch_body)
+                    response = requests.post("http://159.203.137.178:2358/submissions/batch", json=batch_body)
                     response.raise_for_status()
                     data = response.json()
                     tokens = []
