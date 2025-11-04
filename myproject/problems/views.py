@@ -312,7 +312,7 @@ def process_submit_code(request):
 
                 except requests.exceptions.RequestException as e:
                     # to troubleshoot, pass e into the f string, for now leaving it as this. 
-                    messages.error(request, f"Something went Wrong")
+                    messages.error(request, f"Something went Wrong. ERROR: {e}")
                     return render(request, "problems/page/problem_run_response.html")
             
             else:
