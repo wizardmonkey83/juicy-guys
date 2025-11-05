@@ -10,7 +10,7 @@
         </div>
         <div class="testcase-tabs">
         {% for result in results %}
-            <button id="result_{{ forloop.counter }}" type="button" class="testcase-tab {% if forloop.first %}active{% endif %}" data-input-display="{{ result.stdin }}" data-output-display="{{ result.expected_output }}" data-stdout-display="{{ result.stdout }}" data-input="{{ result.stdin }}" data-output="{{ result.expected_output }}" data-stdout="{{ result.stdout }}" data-status-description="{{ result.status_description }}">Case {{ forloop.counter }}</button>
+            <button id="result_{{ forloop.counter }}" type="button" class="testcase-tab {% if forloop.first %}active{% endif %} {% if result.status_id == 3 %}green{% elif result.status_id == 4 %}red{% endif %}" data-input-display="{{ result.stdin }}" data-output-display="{{ result.expected_output }}" data-stdout-display="{{ result.stdout }}" data-input="{{ result.stdin }}" data-output="{{ result.expected_output }}" data-stdout="{{ result.stdout }}" data-status-description="{{ result.status_description }}">Case {{ forloop.counter }}</button>
         {% endfor %}
         </div>
         <div class="result-content">
