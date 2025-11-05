@@ -225,7 +225,6 @@ def process_submit_code(request):
     if request.method == "POST":
         form = GetCode(request.POST)
         if form.is_valid():
-            # get code
             source_code = form.cleaned_data["code"]
             problem_id = form.cleaned_data["problem_id"]
             language_id = form.cleaned_data["language_id"]
@@ -233,33 +232,27 @@ def process_submit_code(request):
 
             try:
                 problem = Problem.objects.get(id=problem_id)
+                language = Language.objects.get(judge0_id=language_id)
             except Problem.DoesNotExist:
-                # TODO figure out html fragment to be returned with error messages
                 messages.error(request, "Unable to Locate Problem")
                 return render(request, "problems/page/problem_run_response.html")
-            try:
-                language = Language.objects.get(judge0_id=language_id)
             except Language.DoesNotExist:
                 messages.error(request, "Unable to locate language")
                 return render(request, "problems/page/problem_run_response.html")
 
-            class_name = problem.class_name
-            method_name = problem.method_name
-            parameter_names = problem.parameter_names
-
-            # the language filter ay not actually be necessary. double check
-            testcases = TestCase.objects.filter(problem=problem, language__judge0_id=71)
-            print(f"TESTCASES: {testcases}")
-            # going back to singular submissions. issue might havee been that  the batch size was too big for judge0 to handle
+            testcases = TestCase.objects.filter(problem=problem, language__judge0_id=language_id)
+            # print(f"TESTCASES: {testcases}")
+            
             if testcases:
-                submissions_payload = []
-                # to map testcases back to tokens
-                testcase_id_map = {}
+                tokens = []
                 
                 try:
-                    for i, testcase in enumerate(testcases):
+                    for testcase in testcases:
                         stdin_dict = testcase.input_data
                         expected_output = testcase.expected_output
+
+                        class_name = problem.class_name
+                        method_name = problem.method_name
 
                         if language.judge0_id == 71:
                             scaffolding_imports = "import sys\nimport json\nfrom typing import List, Dict, Set, Tuple, Optional\n"
@@ -279,38 +272,23 @@ def process_submit_code(request):
 
                         valid_stdin_json = json.dumps(stdin_dict)
 
-                        submissions_payload.append({
+                        # single submission cause its failing constantly
+                        payload = {
                             "source_code": full_script_string, 
                             "language_id": language_id, 
                             "stdin": valid_stdin_json, 
                             "expected_output": expected_output
-                        })
+                        }
+                        response = requests.post("http://159.203.137.178:2358/submissions?wait=false", json=payload)
+                        # to raise erronius thingies
+                        response.raise_for_status()
                         
-                        # so that these dont get mixed up
-                        testcase_id_map[i] = testcase.id
+                        data = response.json()
+                        token = data["token"]
 
-                    batch_payload = {"submissions": submissions_payload}
-
-                    print("--- START: JUDGE0 BATCH PAYLOAD ---")
-                    try:
-                        # This will pretty-print the JSON data
-                        print(json.dumps(batch_payload, indent=2))
-                    except Exception as e:
-                        print(f"Could not dump JSON: {e}")
-                    print("--- END: JUDGE0 BATCH PAYLOAD ---")
-                    
-                    
-                    
-                    response = requests.post("http://159.203.137.178:2358/submissions/batch?wait=false", json=batch_payload)
-                    response.raise_for_status() 
-                    data = response.json()
-                    
-                    tokens = []
-                    for i, token_data in enumerate(data):
-                        testcase_id = testcase_id_map[i]
                         tokens.append({
-                            "testcase_id": testcase_id,
-                            "token": token_data["token"]
+                            "testcase_id": testcase.id,
+                            "token": token
                         })
 
                     request.session["tokens"] = tokens
@@ -318,336 +296,328 @@ def process_submit_code(request):
                     request.session["problem_id"] = problem_id
                     request.session["language_id"] = language_id
                     request.session["code"] = source_code
-
+                    
                     return render(request, "problems/page/submitting.html")
 
                 except requests.exceptions.RequestException as e:
-                    # to troubleshoot, pass e into the f string, for now leaving it as this. 
-                    messages.error(request, f"Something went Wrong. ERROR: {e}")
+                    messages.error(request, f"Something went Wrong: {e}")
                     return render(request, "problems/page/problem_run_response.html")
             
             else:
                 messages.error(request, "No Testcases Found")
                 return render(request, "problems/page/problem_run_response.html") 
         else:
-            # form is invalid
             messages.error(request, "Invalid Form")
             return render(request, "problems/page/problem_run_response.html")
 
 
+@login_required
 def check_submit_results(request):
     print("CHECKING SUBMIT RESULTS")
     tokens = request.session.get("tokens")
-    print(f"TOKENS: {tokens}")
     problem_id = request.session.get("problem_id")
     language_id = request.session.get("language_id")
     code = request.session.get("code")
 
     results = request.session.get("submission_results", [])
+    
+    if not tokens:
+        # so that a final poll doesnt break
+        return HttpResponse(status=204)
 
-    pending_tokens = []
-    # so that multiple of the same ones arent repeated over multiple for loops. may not be neccesarry, more of a "in case"
-    processed_tokens = set()
-    if tokens:
-        tokens_strings = [item["token"] for item in tokens]
-        tokens_formatted = ",".join(tokens_strings)
-        tokens_and_testcase_ids = {item["token"]: item["testcase_id"] for item in tokens}
+    new_pending_tokens = []
+    all_tokens_processed = True
 
-        response = requests.get(f"http://159.203.137.178:2358/submissions/batch?tokens={tokens_formatted}")
-        data = response.json()
+    # singluar get since batch is being a ******
+    for item in tokens:
+        token = item["token"]
+        testcase_id = item["testcase_id"]
 
+        try:
+            # single get
+            response = requests.get(f'http://159.203.137.178:2358/submissions/{token}')
+            response.raise_for_status() # Check for HTTP errors
+            data = response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Error checking token {token}: {e}")
+            new_pending_tokens.append(item)
+            all_tokens_processed = False
+            continue
 
-        # judge0 returns the submissions as a dictionary, so instead of iterating over data, i shouldve been iterating over each submission in data.
-        for submission in data.get("submissions", []):
-            token = submission["token"]
-            status = submission["status"]["id"]
-            testcase_id = tokens_and_testcase_ids.get(token)
-            # not finished, keep polling
-            if status == 1 or status == 2:
-                continue
-
-            # accepted or wrong answer
-            processed_tokens.add(token)
-            if status == 3 or status == 4:
-                stdout = submission["stdout"]
-                stderr = submission["stderr"]
-                status_id = submission["status"]["id"]
-                status_description = submission["status"]["description"]
-                runtime = submission["time"]
-                memory = submission["memory"]
-
-                try:
-                    testcase = TestCase.objects.get(id=testcase_id)
-
-                    results.append({
-                        "stdout": stdout,
-                        "stderr": stderr,
-                        "status_id": status_id,
-                        "status_description": status_description,
-                        "language_id": language_id,
-                        "time": runtime,
-                        "stdin": testcase.input_data,
-                        "expected_output": testcase.expected_output
-                    })
-                    # this should add them to the session
-                    request.session["submission_results"] = results
-                except TestCase.DoesNotExist:
-                    # TODO this needs to return a fragment
-                    messages.error(request, "Unable to Retrieve Testcase")
-            else:
-                # runtime error
-                stderr = submission["stderr"]
-                status_description = submission["status"]["description"]
-
-                try:
-                    problem = Problem.objects.get(id=problem_id)
-                except Problem.DoesNotExist:
-                    # shouldve just been doing this all along
-                    problem = None 
-
-                try:
-                    testcase = TestCase.objects.get(id=testcase_id)
-                    stdin_data = testcase.input_data
-                    expected_output_data = testcase.expected_output
-                except TestCase.DoesNotExist:
-                    pass
-                
-                context = {
-                    "stderr": stderr, 
-                    "status_description": status_description,
-                    "problem": problem,
-                    "language_id": language_id,
-                    "stdin": stdin_data,
-                    "expected_output": expected_output_data
-                }
-
-                del request.session["tokens"]
-                del request.session["submission_results"]
-                del request.session["problem_id"]
-                del request.session["language_id"]
-                del request.session["code"]
-
-                return render(request, "problems/page/output_window.html", context)
+        status = data["status"]["id"]
         
-        for item in tokens:
-            if item["token"] not in processed_tokens:
-                pending_tokens.append(item)
-        # so that finished testcases arent looped over
-        request.session["tokens"] = pending_tokens
-            
-        # submission completed (all testcases tested)  
-        if len(pending_tokens) == 0:
+        # still processing
+        if status == 1 or status == 2:
+            new_pending_tokens.append(item)
+            all_tokens_processed = False
+            continue
+
+        # accepted or wrong answer
+        elif status == 3 or status == 4:
+            stdout = data["stdout"]
+            stderr = data["stderr"]
+            status_id = data["status"]["id"]
+            status_description = data["status"]["description"]
+            runtime = data["time"]
+            memory = data["memory"]
+
+            try:
+                testcase = TestCase.objects.get(id=testcase_id)
+                results.append({
+                    "stdout": stdout,
+                    "stderr": stderr,
+                    "status_id": status_id,
+                    "status_description": status_description,
+                    "language_id": language_id,
+                    "time": runtime,
+                    "memory": memory,
+                    "stdin": testcase.input_data,
+                    "expected_output": testcase.expected_output
+                })
+            except TestCase.DoesNotExist:
+                messages.error(request, "Unable to Retrieve Testcase")
+        
+        else:
+            # runtime error or other error
+            stderr = data.get("stderr")
+            status_description = data.get("status", {}).get("description", "Error")
+
             try:
                 problem = Problem.objects.get(id=problem_id)
             except Problem.DoesNotExist:
-                # TODO make this functional
-                messages.error(request, "Unable to locate problem")
+                problem = None 
+
             try:
-                language = Language.objects.get(judge0_id=language_id)
-            except Language.DoesNotExist:
-                messages.error(request, "Unable to locate language")
+                testcase = TestCase.objects.get(id=testcase_id)
+                stdin_data = testcase.input_data
+                expected_output_data = testcase.expected_output
+            except TestCase.DoesNotExist:
+                stdin_data = None
+                expected_output_data = None
+            
+            context = {
+                "stderr": stderr, 
+                "status_description": status_description,
+                "problem": problem,
+                "language_id": language_id,
+                "stdin": stdin_data,
+                "expected_output": expected_output_data
+            }
 
-            num_of_testcases = TestCase.objects.filter(problem=problem, language=language).count()
-            # if all testcases were passed (submission accepted)
-            final_correct_count = 0
-            final_total_runtime = []
-            final_total_memory = []
-
-            for result in results:
-                if result["status_id"] == 3:
-                    final_correct_count += 1
-                # if None is returned, 0 replaces it
-                final_total_runtime.append(float(result.get("time", 0) or 0))
-                final_total_memory.append(result.get("memory", 0) or 0)
-
-            # accepted submission
-            if final_correct_count == num_of_testcases:
-                user = request.user
-                user.profile.problems_solved_count += 1
-                user.profile.submissions_made_count += 1
-                problem.problem_solved_count += 1
-                problem.submissions_made_count += 1
-                user.profile.save()
-                problem.save()
-
-                # checks to see if level up is needed. 
-                try:
-                    # there should only be one character that meets these two filters (difficulty and category), however keep an eye on this as it may change in the future
-                    character = Character.objects.get(category=problem.category)
-                    # user cannot recieve more problems solved points for problems they have already solved.
-                    user_problem = UserProblem.objects.filter(Q(status="blank") | Q(status="attempted"), user=user, problem=problem)
-
-                    if user_problem:
-                        user_character, created = UserCharacter.objects.get_or_create(user=user, character=character)
-                        user_character.problems_solved_count += 1  
-
-                        if user_character.problems_solved_count == 5:
-                            user_character.level = "bronze"
-                        if user_character.problems_solved_count == 10:
-                            user_character.level = "silver"
-                        if user_character.problems_solved_count == 15:
-                            user_character.level = "gold"
-                        user_character.save()
-                except Character.DoesNotExist:
-                    # TODO make this functional
-                    messages.error(request, "Unable to locate character")
-                
-    
-                user_problem, created = UserProblem.objects.get_or_create(problem=problem, user=user)
-                user_problem.status = "solved"
-                user_problem.save()
-
-            else:
-                user = request.user
-                user.profile.submissions_made_count += 1
-                problem.submissions_made_count += 1
-                user_problem, created = UserProblem.objects.get_or_create(problem=problem, user=user)
-                # might be redundant
-                if user_problem.status != "solved":
-                    user_problem.status = "attempted"
-
-                user_problem.save()
-                user.profile.save()
-                problem.save()
-
-            if final_total_runtime:
-                avg_runtime = sum(final_total_runtime) / len(final_total_runtime)
-            else:
-                avg_runtime = 0
-            if final_total_memory:
-                avg_memory = sum(final_total_memory) / len(final_total_memory)
-            else:
-                avg_memory = 0
-
-            if final_correct_count == num_of_testcases:
-                # this might work. submission is referenced below
-                Submission.objects.create(
-                    user=user,
-                    problem=problem,
-                    language=language,
-                    code=code,
-                    testcases_passed=final_correct_count,
-                    num_of_testcases=num_of_testcases,
-                    status="Accepted",
-                    runtime=avg_runtime,
-                    memory=avg_memory,
-                )
-            else:
-                Submission.objects.create(
-                    user=user,
-                    problem=problem,
-                    language=language,
-                    code=code,
-                    testcases_passed=final_correct_count, 
-                    num_of_testcases=num_of_testcases,
-                    status="Wrong Answer",
-                    runtime=avg_runtime,
-                    memory=avg_memory,
-                )
-
-            # updating streak
-            today = datetime.now().date()
-            yesterday = today - timedelta(days=1)
-            if user.profile.last_submission_date == today:
-                pass
-            else:
-                if user.profile.last_submission_date == yesterday:
-                    user.profile.current_streak += 1
-                else:
-                    user.profile.current_streak = 1
-                if user.profile.current_streak > user.profile.max_streak:
-                    user.profile.max_streak = user.profile.current_streak
-                user.profile.last_submission_date = today
-                user.profile.save()
-            # TODO ill add badges later. cant be bothered.
-            """
-            # GOAT badge (messi)
-            if user.profile.acceptance_rate >= .95:
-                # this will return an error until i create the badge
-                badge = Badge.objects.get(title="GOAT")
-                if user.profile.badges.filter(id=badge.id).exists():
-                    # i think this is correct....
-                    pass
-                else:
-                    user.profile.badges.add(badge)
-            # ENOC badge (ozuna). for now its solving all problems, except legendary. should probably change
-            if user.profile.problems_solved_count == Problem.objects.filter(Q(difficulty="easy") | Q(difficulty="medium") | Q(difficulty="hard")).count():
-                badge = Badge.objects.get(title="ENOC")
-                if user.profile.badges.filter(id=badge.id).exists():
-                    pass
-                else:
-                    # cant use += for ManyToMany relationships
-                    user.profile.badges.add(badge)
-            # BATMAN badge (solve problem between 12am and 5am)
-            now = datetime.time.now()
-            midnight = datetime.time(00, 00, 00)
-            five_am = datetime.time(5, 00, 00)
-            if now >= midnight and now <= five_am:
-                badge = Badge.objects.get(title="Batman")
-                if user.profile.badges.filter(id=badge.id).exists():
-                    pass
-                else:
-                    user.profile.badges.add(badge)
-            # MASTER CHIEF (solve a legendary problem)
-            if problem.difficulty == "legendary" and correct == num_of_testcases:
-                badge = Badge.objects.get(title="Master Chief")
-                if user.profile.badges.filter(id=badge.id).exists():
-                    pass
-                else:
-                    user.profile.badges.add(badge)
-            # AVATAR master an element (solve all problems in a category)
-            all_problems_in_category_count = Problem.objects.filter(category=problem.category).count()
-            solved_problems_count = UserProblem.objects.filter(problem__category=problem.category, status="solved", user=user).count()
-            # this may be a bad way of determining solved problems in a certain category
-            if all_problems_in_category_count == solved_problems_count:
-                badge = Badge.objects.get(title="Avatar")
-                if user.profile.badges.filter(id=badge.id).exists():
-                    pass
-                else:
-                    user.profile.badges.add(badge)
-            """
-            # so that tokens dont interfere with other processes
             del request.session["tokens"]
             del request.session["submission_results"]
             del request.session["problem_id"]
             del request.session["language_id"]
             del request.session["code"]
 
-            # list() makes the query execute once
-            example_inputs = list(ExampleTestcase.objects.filter(problem=problem).values_list('input_data', flat=True))
-            # so that only the example testcases are displayed to the frontend
-            display_results = [result for result in results if result["stdin"] in example_inputs]
+            return render(request, "problems/page/output_window.html", context)
+        
+    request.session["submission_results"] = results
+    request.session["tokens"] = new_pending_tokens
+        
+    # submission completed (all testcases tested)  
+    if all_tokens_processed:
+        try:
+            problem = Problem.objects.get(id=problem_id)
+        except Problem.DoesNotExist:
+            # TODO make this functional
+            messages.error(request, "Unable to locate problem")
+        try:
+            language = Language.objects.get(judge0_id=language_id)
+        except Language.DoesNotExist:
+            messages.error(request, "Unable to locate language")
 
-            if final_correct_count == num_of_testcases:
-                testcases_passed = f"{final_correct_count}/{num_of_testcases}"
-                context = {
-                    "results": display_results,
-                    "submission_was_successful": True,
-                    "passed_testcases": testcases_passed,
-                    "overall_status": "Accepted",
-                    "problem": problem,
-                    "language_id": language.judge0_id
-                }
-                # print(f"ACCEPTED CONTEXT: {context}")
-                return render(request, "problems/page/output_window.html", context)
-            else:
-                testcases_passed = f"{final_correct_count}/{num_of_testcases}"
-                context = {
-                    "results": results,
-                    "submission_was_successful": True,
-                    "problem": problem,
-                    "overall_status": "Wrong Answer",
-                    "passed_testcases": testcases_passed,
-                    "language_id": language.judge0_id
-                }
-                # print(f"WRONG CONTEXT: {context}")
-                return render(request, "problems/page/output_window.html", context)
+        num_of_testcases = TestCase.objects.filter(problem=problem, language=language).count()
+        # if all testcases were passed (submission accepted)
+        final_correct_count = 0
+        final_total_runtime = []
+        final_total_memory = []
+
+        for result in results:
+            if result["status_id"] == 3:
+                final_correct_count += 1
+            # if None is returned, 0 replaces it
+            final_total_runtime.append(float(result.get("time", 0) or 0))
+            final_total_memory.append(result.get("memory", 0) or 0)
+
+        # accepted submission
+        if final_correct_count == num_of_testcases:
+            user = request.user
+            user.profile.problems_solved_count += 1
+            user.profile.submissions_made_count += 1
+            problem.problem_solved_count += 1
+            problem.submissions_made_count += 1
+            user.profile.save()
+            problem.save()
+
+            # checks to see if level up is needed. 
+            try:
+                # there should only be one character that meets these two filters (difficulty and category), however keep an eye on this as it may change in the future
+                character = Character.objects.get(category=problem.category)
+                # user cannot recieve more problems solved points for problems they have already solved.
+                user_problem = UserProblem.objects.filter(Q(status="blank") | Q(status="attempted"), user=user, problem=problem)
+
+                if user_problem:
+                    user_character, created = UserCharacter.objects.get_or_create(user=user, character=character)
+                    user_character.problems_solved_count += 1  
+
+                    if user_character.problems_solved_count == 5:
+                        user_character.level = "bronze"
+                    if user_character.problems_solved_count == 10:
+                        user_character.level = "silver"
+                    if user_character.problems_solved_count == 15:
+                        user_character.level = "gold"
+                    user_character.save()
+            except Character.DoesNotExist:
+                # TODO make this functional
+                messages.error(request, "Unable to locate character")
+            
+
+            user_problem, created = UserProblem.objects.get_or_create(problem=problem, user=user)
+            user_problem.status = "solved"
+            user_problem.save()
 
         else:
-            # keep polling
-            return HttpResponse(status=204)
-    
+            user = request.user
+            user.profile.submissions_made_count += 1
+            problem.submissions_made_count += 1
+            user_problem, created = UserProblem.objects.get_or_create(problem=problem, user=user)
+            # might be redundant
+            if user_problem.status != "solved":
+                user_problem.status = "attempted"
+
+            user_problem.save()
+            user.profile.save()
+            problem.save()
+
+        if final_total_runtime:
+            avg_runtime = sum(final_total_runtime) / len(final_total_runtime)
+        else:
+            avg_runtime = 0
+        if final_total_memory:
+            avg_memory = sum(final_total_memory) / len(final_total_memory)
+        else:
+            avg_memory = 0
+
+        if final_correct_count == num_of_testcases:
+            # this might work. submission is referenced below
+            Submission.objects.create(
+                user=user,
+                problem=problem,
+                language=language,
+                code=code,
+                testcases_passed=final_correct_count,
+                num_of_testcases=num_of_testcases,
+                status="Accepted",
+                runtime=avg_runtime,
+                memory=avg_memory,
+            )
+        else:
+            Submission.objects.create(
+                user=user,
+                problem=problem,
+                language=language,
+                code=code,
+                testcases_passed=final_correct_count, 
+                num_of_testcases=num_of_testcases,
+                status="Wrong Answer",
+                runtime=avg_runtime,
+                memory=avg_memory,
+            )
+
+        # updating streak
+        today = datetime.now().date()
+        yesterday = today - timedelta(days=1)
+        if user.profile.last_submission_date == today:
+            pass
+        else:
+            if user.profile.last_submission_date == yesterday:
+                user.profile.current_streak += 1
+            else:
+                user.profile.current_streak = 1
+            if user.profile.current_streak > user.profile.max_streak:
+                user.profile.max_streak = user.profile.current_streak
+            user.profile.last_submission_date = today
+            user.profile.save()
+        # TODO ill add badges later. cant be bothered.
+        """
+        # GOAT badge (messi)
+        if user.profile.acceptance_rate >= .95:
+            # this will return an error until i create the badge
+            badge = Badge.objects.get(title="GOAT")
+            if user.profile.badges.filter(id=badge.id).exists():
+                # i think this is correct....
+                pass
+            else:
+                user.profile.badges.add(badge)
+        # ENOC badge (ozuna). for now its solving all problems, except legendary. should probably change
+        if user.profile.problems_solved_count == Problem.objects.filter(Q(difficulty="easy") | Q(difficulty="medium") | Q(difficulty="hard")).count():
+            badge = Badge.objects.get(title="ENOC")
+            if user.profile.badges.filter(id=badge.id).exists():
+                pass
+            else:
+                # cant use += for ManyToMany relationships
+                user.profile.badges.add(badge)
+        # BATMAN badge (solve problem between 12am and 5am)
+        now = datetime.time.now()
+        midnight = datetime.time(00, 00, 00)
+        five_am = datetime.time(5, 00, 00)
+        if now >= midnight and now <= five_am:
+            badge = Badge.objects.get(title="Batman")
+            if user.profile.badges.filter(id=badge.id).exists():
+                pass
+            else:
+                user.profile.badges.add(badge)
+        # MASTER CHIEF (solve a legendary problem)
+        if problem.difficulty == "legendary" and correct == num_of_testcases:
+            badge = Badge.objects.get(title="Master Chief")
+            if user.profile.badges.filter(id=badge.id).exists():
+                pass
+            else:
+                user.profile.badges.add(badge)
+        # AVATAR master an element (solve all problems in a category)
+        all_problems_in_category_count = Problem.objects.filter(category=problem.category).count()
+        solved_problems_count = UserProblem.objects.filter(problem__category=problem.category, status="solved", user=user).count()
+        # this may be a bad way of determining solved problems in a certain category
+        if all_problems_in_category_count == solved_problems_count:
+            badge = Badge.objects.get(title="Avatar")
+            if user.profile.badges.filter(id=badge.id).exists():
+                pass
+            else:
+                user.profile.badges.add(badge)
+        """
+        # so that tokens dont interfere with other processes
+        del request.session["tokens"]
+        del request.session["submission_results"]
+        del request.session["problem_id"]
+        del request.session["language_id"]
+        del request.session["code"]
+
+        if final_correct_count == num_of_testcases:
+            testcases_passed = f"{final_correct_count}/{num_of_testcases}"
+            context = {
+                "results": results,
+                "submission_was_successful": True,
+                "passed_testcases": testcases_passed,
+                "overall_status": "Accepted",
+                "problem": problem,
+                "language_id": language.judge0_id
+            }
+            return render(request, "problems/page/output_window.html", context)
+        else:
+            testcases_passed = f"{final_correct_count}/{num_of_testcases}"
+            context = {
+                "results": results,
+                "submission_was_successful": True,
+                "problem": problem,
+                "overall_status": "Wrong Answer",
+                "passed_testcases": testcases_passed,
+                "language_id": language.judge0_id
+            }
+            return render(request, "problems/page/output_window.html", context)
+
     else:
+        # keep polling
         return HttpResponse(status=204)
 
 
