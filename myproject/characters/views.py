@@ -21,7 +21,7 @@ def character_list_window(request):
 
 @login_required
 def search_for_character(request):
-    if request.method == "POST":
+    if request.method == "POST": 
         form = SearchForCharacter(request.POST)
         if form.is_valid():
             user = request.user

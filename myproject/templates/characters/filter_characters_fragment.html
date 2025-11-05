@@ -1,6 +1,6 @@
 {% if characters %}
     {% for character in characters %}
-        <div class="character-card {% if character.user_level == 'blank' %}not-achieved{% endif %}">
+        <div class="character-card {% if character.problems_solved_count == 0 %}not-achieved{% endif %}">
             <div class="card-outer-border level-{{ character.user_level|lower|default:'none' }}"> 
                 <div class="card-border">
                     <div class="card-body" style="background-image: url('/static/images/cards/{{ character.technical_name }}/{{ character.technical_name }}-background-frame.png');">
