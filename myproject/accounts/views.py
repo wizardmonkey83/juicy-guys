@@ -34,7 +34,7 @@ def signup_view(request):
 
             user = form.save()
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            return redirect("index")
+            return redirect("problem_list_window")
         
     else:
         form = SignUpForm()
@@ -48,7 +48,7 @@ def user_created(sender, instance, created, **kwargs):
         # so that the cards appear as not achieved
         characters = Character.objects.all()
         for character in characters:
-            UserCharacter.objects.create(user=instance, character=character, level="blank", problems_solved_count=0)
+            UserCharacter.objects.create(user=instance, character=character, level="blank", problems_solved_count=0) 
 
 def login_view(request):
     if request.method == "POST":
@@ -59,7 +59,7 @@ def login_view(request):
             user = authenticate(request, username=username, password=password)
             if user is not None:
                 login(request, user)
-                return redirect("index")
+                return redirect("problem_list_window")
             else:
                 # not sure if this is the best method for displaying errors unless the message can pop up without reloading or taking the user to another page.
                 messages.error(request, "Invalid Username or Password")

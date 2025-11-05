@@ -1,10 +1,10 @@
 <div id="delete-logout" class="card-container">
-    <form>
+    <form action="{% url 'delete_account' %}">
         <h2 class="section-header">Delete Account</h2>
         <div class="profile-tags-container">
             <p class="profile-join">Are you sure? This action is destructive and cannot be undone.</p>
-            <button type="submit" hx-get="{% url 'delete_account' %}" class="profile-edit-button-danger">Delete Account</button>
+            <button type="submit" class="profile-edit-button-danger">Delete Account</button>
         </div>
     {% csrf_token %}
-    </form>
+    </form> 
 </div>
