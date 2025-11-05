@@ -685,6 +685,13 @@ def filter_problem_difficulty(request):
                 return render(request, "problems/list/search_problems_fragment.html", {"problems": problems})
     return HttpResponse("")
 
+@login_required
+def filter_problem_status(request):
+    user = request.user
+    user_status_subquery = UserProblem.objects.filter(problem=OuterRef("pk"), user=user, status="attempted").values("status")[:1]
+    problems = Problem.objects.annotate(user_status=Subquery(user_status_subquery))
+    return render(request, "problems/list/filter_problem_status.html", {"problems": problems})
+
 
 
 @login_required

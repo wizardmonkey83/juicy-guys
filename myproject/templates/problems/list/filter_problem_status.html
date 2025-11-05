@@ -1,0 +1,17 @@
+{% for problem in problems %}
+    {% if problem.user_status == "attempted" %}
+    <a href="{% url 'load_problem' problem_id=problem.id %}" class="problem-rectangle {% cycle 'odd' 'even' %}">
+        
+        <div class="problem-main-info">
+            <div class="problem-title">{{ problem.title }}</div>
+            <div class="problem-status attempted">Attempted</div>
+        </div>
+        
+        <div class="problem-meta-info">
+            <div class="problem-category" title="Category">{{ problem.category }}</div>
+            <div class="problem-percentage" title="Acceptance">{{ problem.acceptance_rate }}%</div>
+            <div class="problem-difficulty {{ problem.difficulty|lower }}" title="Difficulty">{{ problem.get_difficulty_display }}</div>
+        </div>
+    </a>
+    {% endif %}
+{% endfor %}

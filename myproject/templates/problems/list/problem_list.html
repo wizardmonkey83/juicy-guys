@@ -78,6 +78,7 @@
                 <button class="tag-item difficulty-medium" type="submit" hx-post="{% url 'filter_problem_difficulty' %}" value="medium" name="difficulty" hx-target="#problem-list" hx-swap="innerHTML">Medium</button>
                 <button class="tag-item difficulty-hard" type="submit" hx-post="{% url 'filter_problem_difficulty' %}" value="hard" name="difficulty" hx-target="#problem-list" hx-swap="innerHTML">Hard</button>
                 <button class="tag-item difficulty-legendary" type="submit" hx-post="{% url 'filter_problem_difficulty' %}" value="legendary" name="difficulty" hx-target="#problem-list" hx-swap="innerHTML">Legendary</button>
+                <button class="tag-item difficulty-medium" type="submit" hx-post="{% url 'filter_problem_status' %}" hx-target="#problem-list" hx-swap="innerHTML">Attempted</button>
             {% csrf_token %}
             </form>
 
