@@ -38,7 +38,7 @@
             <input id="password2_input" placeholder="Confirm your new password" name="password2" type="password"/>
         </div>
         <div class="form-button-group">
-            <button type="submit" class="form-button-save">Save Changes</button>
+            <button type="submit" class="form-button-save" hx-get="{% url 'load_badges_fragment' %}" hx-target="#profile-badge-section" hx-swap="outerHTML">Save Changes</button>
             <button type="button" class="form-button-cancel" hx-get="{% url 'load_badges_fragment' %}" hx-target="#profile-badge-section" hx-swap="outerHTML">Cancel</button>
         </div>
     {% csrf_token %}
