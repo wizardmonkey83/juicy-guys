@@ -275,11 +275,10 @@ body {
     flex-grow: 1;   
     flex-shrink: 1; 
     flex-basis: 50%;
-    min-height: 150px;
+    min-height: 0;
 }
 .console-content {
     padding: 1rem;
-    min-height: 100px;
     flex-grow: 1;
     min-height: 0;
     overflow-y: auto;
