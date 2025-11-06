@@ -43,9 +43,13 @@
                 <div class="form-group">
                     {{ form.password }}
                 </div>
-                
+
+
                 {% if form.errors %}
                     <div class="form-errors">
+                        {% for error in form.non_field_errors %}
+                            <p class="error-message">{{ error }}</p>
+                        {% endfor %}
                         {% for field, error_list in form.errors.items %}
                             {% for error in error_list %}
                                 <p class="error-message">{{ error }}</p>
@@ -64,9 +68,7 @@
                 <span>Continue with GitHub</span>
             </a>
 
-            <p class="switch-link">
-                Don't have an account? <a href="{% url 'signup_view' %}">Sign Up</a>
-            </p>
+            <p class="switch-link">Don't have an account? <a href="{% url 'signup_view' %}">Sign Up</a></p>
         </div>
     </main>
 
