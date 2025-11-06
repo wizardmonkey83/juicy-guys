@@ -62,7 +62,7 @@ def login_view(request):
                 return redirect("problem_list_window")
             else:
                 # not sure if this is the best method for displaying errors unless the message can pop up without reloading or taking the user to another page.
-                messages.error(request, "Invalid Username or Password")
+                form.add_error(None, "Invalid Username or Password")
             
     else:
         form = LoginForm()
