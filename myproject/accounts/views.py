@@ -109,7 +109,7 @@ def profile_window(request):
     categories_solved = UserProblem.objects.filter(user=user, status="solved").values_list("problem__category__name", flat=True).distinct()
     total_active_days = Submission.objects.filter(user=user).values("date_submitted__date").distinct().count()
     # slice can be changed for aesthetics
-    recent_submissions = Submission.objects.filter(user=user).order_by("-date_submitted")[:10]
+    recent_submissions = Submission.objects.filter(user=user).order_by("-date_submitted")[:10].distinct()
 
     badges = Badge.objects.all()
 
