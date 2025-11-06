@@ -3,6 +3,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.http import HttpResponse
+from django.urls import reverse
 
 from django.contrib import messages
 from django.db.models import Q
@@ -59,6 +61,7 @@ def login_view(request):
             user = authenticate(request, username=username, password=password)
             if user is not None:
                 login(request, user)
+                
                 return redirect("problem_list_window")
             else:
                 # not sure if this is the best method for displaying errors unless the message can pop up without reloading or taking the user to another page.
@@ -109,7 +112,7 @@ def profile_window(request):
     categories_solved = UserProblem.objects.filter(user=user, status="solved").values_list("problem__category__name", flat=True).distinct()
     total_active_days = Submission.objects.filter(user=user).values("date_submitted__date").distinct().count()
     # slice can be changed for aesthetics
-    recent_submissions = Submission.objects.filter(user=user).order_by("-date_submitted")[:10].distinct()
+    recent_submissions = Submission.objects.filter(user=user).order_by("-date_submitted").distinct()[:10]
 
     badges = Badge.objects.all()
 
