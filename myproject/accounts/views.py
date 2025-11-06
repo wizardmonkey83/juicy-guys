@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 
 from django.contrib.auth.models import User
 from .models import Profile, Submission, Badge
-from .forms import SignUpForm, LoginForm, ChangeUsernameForm, UploadProfilePictureForm, EditProfileForm
+from .forms import SignUpForm, LoginForm, ChangeUsernameForm, UploadProfilePictureForm, EditProfileForm, EditUserForm
 
 from problems.models import UserProblem, Problem, Category
 from characters.models import Character, UserCharacter
@@ -112,7 +112,7 @@ def profile_window(request):
     categories_solved = UserProblem.objects.filter(user=user, status="solved").values_list("problem__category__name", flat=True).distinct()
     total_active_days = Submission.objects.filter(user=user).values("date_submitted__date").distinct().count()
     # slice can be changed for aesthetics
-    recent_submissions = Submission.objects.filter(user=user).order_by("-date_submitted").distinct("problems")[:10]
+    recent_submissions = Submission.objects.filter(user=user).order_by("-date_submitted")[:10]
 
     badges = Badge.objects.all()
 
@@ -164,35 +164,51 @@ def load_badges_fragment(request):
 @login_required
 def save_edit_profile(request):
     if request.method == "POST":
-        form = EditProfileForm(request.POST)
-        if form.is_valid():
-            user = request.user
-            profile_picture = request.FILES.get("profile_picture")
-            username = form.cleaned_data["username"]
-            email = form.cleaned_data["email"]
-            old_password = form.cleaned_data["old_password"]
-            password1 = form.cleaned_data["password1"]
-            password2 = form.cleaned_data["password2"]
+        user = request.user
+        profile_form = EditProfileForm(request.POST, request.FILES, instance=user.profile)
+        user_form = EditUserForm(request.POST)
+        if user_form.is_valid() and profile_form.is_valid():
+            username = user_form.cleaned_data["username"]
+            email = user_form.cleaned_data["email"]
+            old_password = user_form.cleaned_data["old_password"]
+            password1 = user_form.cleaned_data["password1"]
+            password2 = user_form.cleaned_data["password2"]
+            # one redeeming quality
+            profile_form.save()
 
-            if profile_picture:
-                user.profile.profile_picture = profile_picture
-            if username:
+            if username and username != user.username:
                 username_exists = User.objects.filter(username=username).exists()
-                if not username_exists and username != user.username:
-                    user.username = username
-                    user.save()
-            if email:
-                if user.email != email:
+                if not username_exists:
+                        user.username = username
+                        user.save()
+                else:
+                    user_form.add_error('username', "This username is already taken.")
+            if email and user.email != email:
                     user.email = email
                     user.save()
-            if old_password:
-                if user.check_password(old_password):
-                    if password1 and password2 and password1 == password2:
-                        user.set_password(password1)
-                        user.save()
-            login(request, user)
-            badges = Badge.objects.all()
-            return render(request, "accounts/profile/badges_fragment.html", {"badges": badges})
+            if old_password or password1 or password2:
+                if not user.check_password(old_password):
+                    user_form.add_error('old_password', "Invalid old password.")
+                elif not password1 or not password2:
+                    user_form.add_error('password1', "Please fill out both new password fields.")
+                elif password1 != password2:
+                    user_form.add_error('password2', "New passwords do not match.")
+                else:
+                    user.set_password(password1)
+                    user.save()
+
+            # no errors
+            if not user_form.errors:
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend') 
+                badges = Badge.objects.all()
+                return render(request, "accounts/profile/badges_fragment.html", {"badges": badges})
+            
+            # either form was invalid or errors appear. form errors cant appear unless they are passed to the frontend
+            context = {
+                "user_form": user_form,
+                "profile_form": profile_form
+            }
+            return render(request, "accounts/profile/edit_profile_options.html", context)
 
 
 # INDEX/ABOUT PAGES ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

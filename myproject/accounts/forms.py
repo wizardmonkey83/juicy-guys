@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from .models import Profile
 
 class SignUpForm(UserCreationForm):
     def __init__(self, *args, **kwargs):
@@ -31,10 +32,16 @@ class ChangeUsernameForm(forms.Form):
 class UploadProfilePictureForm(forms.Form):
     picture = forms.ImageField()
 
-class EditProfileForm(forms.Form):
-    profile_picture = forms.ImageField(required=False)
+class EditProfileForm(forms.ModelForm):
+    profile_picture = forms.ImageField(widget=forms.FileInput, required=False)
+    class Meta:
+        model = Profile
+        fields = ["profile_picture"]
+
+class EditUserForm(forms.Form):
     username = forms.CharField(max_length=100, required=False)
     email = forms.EmailField(max_length=100, required=False)
-    old_password = forms.CharField(required=False)
-    password1 = forms.CharField(required=False)
-    password2 = forms.CharField(required=False)
+    old_password = forms.CharField(required=False, widget=forms.PasswordInput)
+    password1 = forms.CharField(required=False, widget=forms.PasswordInput)
+    password2 = forms.CharField(required=False, widget=forms.PasswordInput)
+            

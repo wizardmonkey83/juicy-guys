@@ -517,3 +517,14 @@ a {
 .form-button-cancel:hover {
     background-color: #4a4a4a;
 }
+
+
+.form-errors {
+    margin-bottom: 1rem;
+}
+.error-message {
+    color: #FF375F;
+    font-family: "DM Sans", sans-serif;
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+}

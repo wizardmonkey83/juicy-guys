@@ -50,6 +50,8 @@ INSTALLED_APPS = [
 
     'problems',
     'characters',
+    # removes old profile pictures
+    'django_cleanup',
 ]
 
 MIDDLEWARE = [
