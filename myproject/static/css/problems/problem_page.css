@@ -63,9 +63,9 @@ a {
 }
 
 html, body {
-    height: 100%;
+    height: 100dvh;
     margin: 0;
-    overflow: hidden; /* Prevents the whole page from scrolling */
+    overflow: hidden;
 }
 
 body {
