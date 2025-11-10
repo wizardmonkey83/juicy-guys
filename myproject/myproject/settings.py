@@ -28,7 +28,7 @@ SOCIAL_AUTH_GITHUB_SECRET = config("SOCIAL_AUTH_GITHUB_SECRET")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['159.203.137.178', 'juicyguys.dev', 'www.juicyguys.dev']
+ALLOWED_HOSTS = ['159.203.137.178', 'juicyguys.dev', 'www.juicyguys.dev', 'juicycodes.dev', 'www.juicycodes.dev']
 
 
 # Application definition
