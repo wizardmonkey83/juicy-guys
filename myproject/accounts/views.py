@@ -30,14 +30,14 @@ def signup_view(request):
         if form.is_valid():
             username = form.cleaned_data["username"]
             email = form.cleaned_data["email"]
-            # TODO you're gonna need to figure out how to display this error within the signup form itself
-            if User.objects.filter(Q(username=username) | Q(email=email)).exists():
-                messages.error(request, "Username and/or Email already exists")
-
-            user = form.save()
-            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            return redirect("problem_list_window")
-        
+            # likely an inneficient query. i think django builds in unique username checks
+            if User.objects.filter(email=email).exists():
+                form.add_error(None, "Email is already associated with an account.")
+            else:
+                user = form.save()
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+                return redirect("problem_list_window")
+            
     else:
         form = SignUpForm()
     return render(request, "accounts/signup.html", {"form": form})
@@ -48,7 +48,7 @@ def user_created(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
         # so that the cards appear as not achieved
-        characters = Character.objects.all()
+        characters = Character.objects.all() 
         for character in characters:
             UserCharacter.objects.create(user=instance, character=character, level="blank", problems_solved_count=0) 
 
@@ -56,16 +56,16 @@ def login_view(request):
     if request.method == "POST":
         form = LoginForm(request.POST)
         if form.is_valid():
-            username = form.cleaned_data["username"]
+            email = form.cleaned_data["email"]
             password = form.cleaned_data["password"]
-            user = authenticate(request, username=username, password=password)
+            user = authenticate(request, username=email, password=password)
             if user is not None:
                 login(request, user)
                 
                 return redirect("problem_list_window")
             else:
                 # not sure if this is the best method for displaying errors unless the message can pop up without reloading or taking the user to another page.
-                form.add_error(None, "Invalid Username or Password")
+                form.add_error(None, "Invalid Email or Password")
             
     else:
         form = LoginForm()
